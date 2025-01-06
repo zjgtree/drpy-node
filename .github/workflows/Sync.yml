@@ -1,0 +1,36 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 每天23点运行一次
+    - cron: "0 02 * * *" # 每天02点运行一次
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout target repository
+      uses: actions/checkout@v2
+      with:
+        repository: zjgtree/drpy-node
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Set up Git config
+      run: |
+        git config --global user.email "${{ secrets.steventree111@gmail.com }}"
+        git config --global user.name "${{ secrets.GIT_zjgtree }}"
+
+    - name: Add upstream remote
+      run: git remote add upstream https://github.com/hjdhnx/drpy-node.git
+
+    - name: Fetch upstream
+      run: git fetch upstream
+
+    - name: Merge upstream main
+      run: |
+        git checkout main
+        git merge upstream/main --allow-unrelated-histories
+        git push origin main
