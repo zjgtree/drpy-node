@@ -11,7 +11,7 @@ export const validateBasicAuth = (request, reply, done) => {
             done();
             return
         }
-        console.log(`[validateBasicAuth] 猫配置文件 ${cf_path} 进入鉴权`);
+        console.log(`[validateBasicAuth] 猫配置文件 ${cf_path} 进入Basic登录鉴权`);
     }
     // console.log('进入了basic验证');
     const authHeader = request.headers.authorization;
@@ -41,6 +41,14 @@ export const validatePwd = async (request, reply) => {
     const apiPwd = process.env.API_PWD;
     if (!apiPwd) {
         return; // 如果未配置 API_PWD，直接通过
+    }
+    if (request.url.startsWith('/config/')) {
+        let cf_path = request.url.slice(8).split('?')[0];
+        // console.log(cf_path);
+        if (['index.js', 'index.js.md5', 'index.config.js', 'index.config.js.md5'].includes(cf_path)) {
+            console.log(`[validatePwd] 猫配置文件 ${cf_path} 跳过接口密码鉴权`);
+            return
+        }
     }
 
     // 从查询参数或请求体中获取 pwd
