@@ -236,10 +236,7 @@ class Go {
   }
   _makeFuncWrapper(funcId) {
     const self = this;
-    console.log("正在绑定函数id：", funcId);
     return function () {
-      console.log("执行函数id：", funcId);
-      console.log("函数参数：", Array.from(arguments));
       const event = {
         id: funcId,
         this: this,
@@ -248,7 +245,6 @@ class Go {
       self._pendingEvent = event;
       self._resume();
       const result = event.result;
-      console.log("函数结果：", result);
       return result;
     };
   }
@@ -319,11 +315,8 @@ const decryptor = (() => {
     return bytesToString(result);
   };
   const decryptStream = async (data, mid, key, url) => {
-    const indexMa = url.split('/').at(-1);
-    if (!indexMa) return url;
-    const index = indexMa[1];
-    const istr = `${index}+gazes_v-@_info`;
-    console.log(istr);
+    if (!url.includes("gazes_v-@_info")) return url;
+    const istr = url.split("/").at(-1);
     const ungzipped = pako.ungzip(data, {
       to: "string",
     });
@@ -581,13 +574,11 @@ var rule = {
     const resp = await axios.get(`${this.host}/filter`, {
       headers: this.headers,
     });
-
     // cookie 处理
     const headers = resp.headers;
     const cookies = headers["set-cookie"];
     const cookie = cookies.map((item) => item.split(";")[0]).join("; ");
     this.headers.Cookie = cookie;
-
     // 请求头处理
     const html = resp.data;
     const kv_macth = html.match(/'headers':({[^{}]*})/)[1];
@@ -595,7 +586,6 @@ var rule = {
     for (const key in kv_headers) {
       this.headers[key] = kv_headers[key];
     }
-
     console.warn("headers", this.headers);
   },
 };
