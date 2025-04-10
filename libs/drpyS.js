@@ -342,6 +342,9 @@ export async function getSandbox(env = {}) {
         setInterval,
         clearTimeout,
         clearInterval,
+        TextEncoder,
+        TextDecoder,
+        performance,
         module: {},   // 模块支持
         exports: {},   // 模块支持
         rule: {}, // 用于存放导出的 rule 对象
