@@ -1,10 +1,12 @@
 import {readdirSync, readFileSync, writeFileSync, existsSync} from 'fs';
+import {readFile} from 'fs/promises';
 import path from 'path';
 import * as drpy from '../libs/drpyS.js';
 import '../libs_drpy/jinja.js'
 import {naturalSort, urljoin, updateQueryString} from '../utils/utils.js'
 import {md5} from "../libs_drpy/crypto-util.js";
 import {ENV} from "../utils/env.js";
+import {extractNameFromCode} from "../utils/python.js";
 import {validateBasicAuth, validatePwd} from "../utils/api_validate.js";
 import {getSitesMap} from "../utils/sites-map.js";
 import {getParsesDict} from "../utils/file.js";
@@ -16,7 +18,9 @@ const {jsEncoder} = drpy;
 async function generateSiteJSON(options, requestHost, sub, pwd) {
     const jsDir = options.jsDir;
     const dr2Dir = options.dr2Dir;
+    const pyDir = options.pyDir;
     const configDir = options.configDir;
+    const jsonDir = options.jsonDir;
     const subFilePath = options.subFilePath;
     const rootDir = options.rootDir;
 
@@ -48,6 +52,33 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
         }
     }
     let sites = [];
+
+    //以下为自定义APP模板部分
+    try {
+        const templateConfigPath = path.join(jsonDir, './App模板配置.json');
+        if (existsSync(templateConfigPath)) {
+            const templateContent = readFileSync(templateConfigPath, 'utf-8');
+            const templateConfig = JSON.parse(templateContent);
+            sites = Object.entries(templateConfig).filter(([key]) => valid_files.includes(`${key}[模板].js`))
+                .flatMap(([key, config]) =>
+                    Object.entries(config)
+                        .filter(([name]) => name !== "示例")
+                        .map(([name]) => ({
+                            key: `drpyS_${name}_${key}`,
+                            name: `${name}[M](${key.replace('App', '').toUpperCase()})`,
+                            type: 4,
+                            api: `${requestHost}/api/${key}[模板]${pwd ? `?pwd=${pwd}` : ''}`,
+                            searchable: 1,
+                            filterable: 1,
+                            quickSearch: 0,
+                            ext: `../json/App模板配置.json$${name}`
+                        })));
+        }
+    } catch (e) {
+        console.error('读取App模板配置失败:', e.message);
+    }
+    //以上为自定义APP[模板]配置自动添加代码
+
     let link_jar = '';
     // console.log('hide_adult:', ENV.get('hide_adult'));
     if (ENV.get('hide_adult') === '1') {
@@ -73,6 +104,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 } catch (e) {
                     throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                 }
+                ruleObject.title = ruleObject.title || baseName;
 
                 let fileSites = [];
                 if (baseName === 'push_agent') {
@@ -90,8 +122,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         fileSites.push({key, name, ext});
                     });
                 } else {
-                    let key = `drpyS_${baseName}`;
-                    let name = `${baseName}(DS)`;
+                    let key = `drpyS_${ruleObject.title}`;
+                    let name = `${ruleObject.title}(DS)`;
                     fileSites.push({key, name});
                 }
 
@@ -156,6 +188,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     } catch (e) {
                         throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                     }
+                    ruleObject.title = ruleObject.title || baseName;
 
                     let fileSites = [];
                     if (baseName === 'push_agent') {
@@ -170,8 +203,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                             fileSites.push({key, name, ext: _ext});
                         });
                     } else {
-                        let key = `drpy2_${baseName}`;
-                        let name = `${baseName}(DR2)`;
+                        let key = `drpy2_${ruleObject.title}`;
+                        let name = `${ruleObject.title}(DR2)`;
                         fileSites.push({key, name, ext});
                     }
 
@@ -197,6 +230,77 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
         });
 
         await batchExecute(dr2_tasks, listener);
+
+    }
+
+    // 根据用户是否启用py源去生成对应配置
+    if (ENV.get('enable_py', '1') === '1') {
+        const py_files = readdirSync(pyDir);
+        let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_')); // 筛选出不是 "_" 开头的 .py 文件
+        // log(py_valid_files);
+        log(`开始生成python的t3配置，pyDir:${pyDir},源数量: ${py_valid_files.length}`);
+
+        const py_tasks = py_valid_files.map((file) => {
+            return {
+                func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
+                    const baseName = path.basename(file, '.py'); // 去掉文件扩展名
+                    const extJson = path.join(pyDir, baseName + '.json');
+                    let api = `${requestHost}/py/${file}`;
+                    let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
+                    if (pwd) {
+                        api += `?pwd=${pwd}`;
+                        if (ext) {
+                            ext += `?pwd=${pwd}`;
+                        }
+                    }
+                    let ruleObject = {
+                        searchable: 1, // 固定值
+                        filterable: 1, // 固定值
+                        quickSearch: 1, // 固定值
+                    };
+                    const fileContent = await readFile(path.join(pyDir, file), 'utf-8');
+                    ruleObject.title = extractNameFromCode(fileContent) || baseName;
+
+                    let fileSites = [];
+                    if (baseName === 'push_agent') {
+                        let key = 'push_agent';
+                        let name = `${ruleObject.title}(hipy_t3)`;
+                        fileSites.push({key, name, ext});
+                    } else if (SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                        SitesMap[baseName].forEach((it) => {
+                            let key = `hipy_py_${it.alias}`;
+                            let name = `${it.alias}(hipy_t3)`;
+                            let _ext = updateQueryString(ext, it.queryStr);
+                            fileSites.push({key, name, ext: _ext});
+                        });
+                    } else {
+                        let key = `hipy_py_${ruleObject.title}`;
+                        let name = `${ruleObject.title}(hipy_t3)`;
+                        fileSites.push({key, name, ext});
+                    }
+
+                    fileSites.forEach((fileSite) => {
+                        const site = {
+                            key: fileSite.key,
+                            name: fileSite.name,
+                            type: 3, // 固定值
+                            api,
+                            searchable: ruleObject.searchable,
+                            filterable: ruleObject.filterable,
+                            quickSearch: ruleObject.quickSearch,
+                            more: ruleObject.more,
+                            logo: ruleObject.logo,
+                            ext: fileSite.ext || "", // 固定为空字符串
+                        };
+                        sites.push(site);
+                    });
+                },
+                param: {file, pyDir, requestHost, pwd, SitesMap},
+                id: file,
+            };
+        });
+
+        await batchExecute(py_tasks, listener);
 
     }
 

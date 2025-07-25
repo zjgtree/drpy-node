@@ -321,6 +321,8 @@ var rule = {
                 d.push(getInput('get_play_proxy_mode', '查看播放代理模式', images.settings));
                 d.push(genMultiInput('enable_dr2', '设置drpy2源启用状态', '设置为1可启用此功能(默认没设置也属于启动，设置其他值关闭)', images.settings));
                 d.push(getInput('get_enable_dr2', '查看drpy2源启用状态', images.settings));
+                d.push(genMultiInput('enable_py', '设置py源启用状态', '设置为1可启用此功能(默认没设置也属于启动，设置其他值关闭)', images.settings));
+                d.push(getInput('get_enable_py', '查看py源启用状态', images.settings));
                 d.push(genMultiInput('now_ai', '设置当前AI', '1: 讯飞星火 2:deepseek 3.讯飞智能体 4.Kimi \n如果不填，连续对话默认使用讯飞星火', images.settings));
                 d.push(getInput('get_now_ai', '查看当前AI', images.settings));
                 d.push(genMultiInput('allow_forward', '设置允许代理转发', '设置为1可启用此功能，有一定的使用场景用于突破网络限制', images.settings));
@@ -996,6 +998,7 @@ var rule = {
             'play_local_proxy_type',
             'play_proxy_mode',
             'enable_dr2',
+            'enable_py',
             'spark_ai_authKey',
             'deepseek_apiKey',
             'sparkBotObject',
@@ -1022,6 +1025,7 @@ var rule = {
             'play_local_proxy_type',
             'get_play_proxy_mode',
             'get_enable_dr2',
+            'get_enable_py',
             'get_spark_ai_authKey',
             'get_deepseek_apiKey',
             'get_sparkBotObject',

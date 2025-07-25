@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const absolutePath = path.resolve('./');
 console.log(absolutePath);
-const data = fs.readFileSync('./js/_360.js', 'utf8');
+// const data = fs.readFileSync('./spider/js/_360.js', 'utf8');
+const data = pathLib.readLib('./_360.js', 'utf8');
 // console.log(data);
 console.log(1111)
 const {getPublicIp1, getPublicIp2} = require('../js/_lib.request.cjs');

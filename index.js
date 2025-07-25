@@ -33,9 +33,21 @@ fastify.register(fastifyStatic, {
 });
 
 fastify.register(fastifyStatic, {
-    root: path.join(__dirname, 'js_dr2'),
+    root: path.join(__dirname, 'spider/js_dr2'),
     prefix: '/js/', // 新的访问路径前缀
     decorateReply: false, // 禁用 sendFile
+});
+
+fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'spider/py'),
+    prefix: '/py/', // 新的访问路径前缀
+    decorateReply: false, // 禁用 sendFile
+    setHeaders: (res, path) => {
+        // 自定义 .py 文件的 Content-Type
+        if (path.endsWith('.py')) {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+        }
+    }
 });
 
 // 注册插件以支持 application/x-www-form-urlencoded
@@ -45,7 +57,7 @@ fastify.register(formBody);
 fastify.addHook('preHandler', (req, reply, done) => {
     if (req.raw.url.startsWith('/apps/')) {
         validateBasicAuth(req, reply, done);
-    } else if (req.raw.url.startsWith('/js/')) {
+    } else if (req.raw.url.startsWith('/js/') || req.raw.url.startsWith('/py/')) {
         validatePwd(req, reply, done).then(r => done());
     } else {
         done();
@@ -75,9 +87,11 @@ import {registerRoutes} from './controllers/index.js';
 registerRoutes(fastify, {
     rootDir: __dirname,
     docsDir: path.join(__dirname, 'docs'),
-    jsDir: path.join(__dirname, 'js'),
-    dr2Dir: path.join(__dirname, 'js_dr2'),
     jxDir: path.join(__dirname, 'jx'),
+    jsonDir: path.join(__dirname, 'json'),
+    jsDir: path.join(__dirname, 'spider/js'),
+    dr2Dir: path.join(__dirname, 'spider/js_dr2'),
+    pyDir: path.join(__dirname, 'spider/py'),
     viewsDir: path.join(__dirname, 'views'),
     configDir: path.join(__dirname, 'config'),
     PORT,

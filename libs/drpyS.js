@@ -1,7 +1,6 @@
 import {readFile} from 'fs/promises';
 import {existsSync, readFileSync, writeFileSync, mkdirSync} from 'fs';
 import {fileURLToPath} from "url";
-import {createRequire} from 'module';
 import {XMLHttpRequest} from 'xmlhttprequest';
 import path from "path";
 import vm from 'vm';
@@ -42,12 +41,13 @@ import '../libs_drpy/json5.js'
 import '../libs_drpy/jinja.js'
 // import '../libs_drpy/jsonpathplus.min.js'
 import '../libs_drpy/drpyCustom.js'
-import '../libs_drpy/moduleLoader.js'
+import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
 // import '../libs_drpy/crypto-js-wasm.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
+const _lib_path = path.join(__dirname, '../spider/js');
 
 globalThis.misc = misc;
 globalThis.utils = utils;
@@ -60,7 +60,8 @@ globalThis.Ali = Ali;
 globalThis.Cloud = Cloud;
 globalThis.Yun = Yun;
 globalThis.Pan = Pan;
-globalThis.require = createRequire(import.meta.url);
+globalThis.require = rootRequire;
+initializeGlobalDollar();
 globalThis._fetch = fetch;
 globalThis.XMLHttpRequest = XMLHttpRequest;
 globalThis.WebSocket = WebSocket;
@@ -106,6 +107,20 @@ globalThis.pathLib = {
             log(`failed for saveFile ${_file_path}　error:${e.message}`);
             return false
         }
+    },
+    readLib: function (filename) {
+        let _file_path = path.join(_lib_path, filename);
+        const resolvedPath = path.resolve(_data_path, _file_path); // 将路径解析为绝对路径
+        if (!resolvedPath.startsWith(_lib_path)) {
+            log(`no access for read ${_file_path}`)
+            return '';
+        }
+        // 检查文件是否存在
+        if (!existsSync(resolvedPath)) {
+            log(`file not found for read ${resolvedPath}`)
+            return '';
+        }
+        return readFileSync(resolvedPath, 'utf8')
     },
 };
 const {sleep, sleepSync, computeHash, deepCopy, urljoin, urljoin2, joinUrl, naturalSort, $js} = utils;
@@ -1535,4 +1550,68 @@ export async function runMain(main_func_code, arg) {
         log(`执行main_func_code发生了错误:${e.message}`);
         return ''
     }
+}
+
+// 清理缓存函数  
+export function clearAllCache() {
+    const excludeList = ['APP模板配置'];
+    let clearedCount = 0;
+
+    // 清理moduleCache，跳过排除列表中的模块  
+    for (const [key, value] of moduleCache.entries()) {
+        let shouldSkip = false;
+
+        // 检查是否在排除列表中  
+        for (const excludeName of excludeList) {
+            if (value.moduleObject && value.moduleObject.title &&
+                value.moduleObject.title.includes(excludeName)) {
+                console.log(`跳过清理模块缓存: ${value.moduleObject.title}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            moduleCache.delete(key);
+            clearedCount++;
+        }
+    }
+
+    // 清理ruleObjectCache，跳过排除列表中的模块  
+    for (const [filePath, value] of ruleObjectCache.entries()) {
+        let shouldSkip = false;
+
+        for (const excludeName of excludeList) {
+            if (filePath.includes(excludeName)) {
+                console.log(`跳过清理规则缓存: ${filePath}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            ruleObjectCache.delete(filePath);
+            clearedCount++;
+        }
+    }
+
+    // 清理jxCache，跳过排除列表中的模块  
+    for (const [key, value] of jxCache.entries()) {
+        let shouldSkip = false;
+
+        for (const excludeName of excludeList) {
+            if (key.includes(excludeName)) {
+                console.log(`跳过清理解析缓存: ${key}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            jxCache.delete(key);
+            clearedCount++;
+        }
+    }
+
+    console.log(`已清理 ${clearedCount} 个模块缓存，排除了 ${excludeList.join(', ')} 相关缓存`);
 }

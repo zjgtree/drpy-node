@@ -5,8 +5,11 @@
 const url = require('url');
 const fs = require('fs');
 const http = require('http');
-const { get_sign, getDmHtml } = require('../js/_lib.douyin_sign.cjs');
-eval(fs.readFileSync('./js/_lib.douyin_pb.cjs', 'utf8'));
+const {get_sign, getDmHtml} = require('./_lib.douyin_sign.cjs');
+// const douyin_pb = fs.readFileSync('./spider/js/_lib.douyin_pb.cjs', 'utf8');
+const douyin_pb = pathLib.readLib('./_lib.douyin_pb.cjs', 'utf8');
+console.log('douyin_pb:', douyin_pb.length);
+eval(douyin_pb);
 
 var rule = {
     类型: '影视',
@@ -30,7 +33,7 @@ var rule = {
         return []
     },
     预处理: async function () {
-        let ck = (await axios({ url: rule.host })).headers['set-cookie'];
+        let ck = (await axios({url: rule.host})).headers['set-cookie'];
         const regex = /ttwid=([^;]+)/;
         const match = ck[0].match(regex);
         if (match) {
@@ -38,7 +41,7 @@ var rule = {
         }
     },
     一级: async function (tid, pg, filter, extend) {
-        let { MY_CATE, MY_FL, MY_PAGE, input } = this;
+        let {MY_CATE, MY_FL, MY_PAGE, input} = this;
         let page = 15 * (MY_PAGE - 1);
         let select_partition = MY_FL.sort || MY_CATE;
         const partition = select_partition.split('$')[0];
@@ -60,7 +63,7 @@ var rule = {
         return setResult(d);
     },
     二级: async function (ids) {
-        let { input } = this;
+        let {input} = this;
         let url = input.split('##')[0];
         let room_id = input.split('##')[1];
         let html = await request(url, {
@@ -91,7 +94,7 @@ var rule = {
         return vod;
     },
     搜索: async function (wd, quick, pg) {
-        let { input } = this;
+        let {input} = this;
         let page = 10 * (pg - 1);
         rule.headers.referer = `${rule.host}/`;
         let url = `https://www.douyin.com/aweme/v1/web/live/search/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_live&keyword=${wd}&offset=${page}&count=10&os_version=10`;
@@ -117,7 +120,7 @@ var rule = {
         return setResult(d);
     },
     lazy: async function (flag, id, flags) {
-        let { input, hostUrl, hostname,getProxyUrl } = this;
+        let {input, hostUrl, hostname, getProxyUrl} = this;
         // log('hostUrl:', hostUrl);
         // log('hostname:', hostname);
         if (input === 'off') {
@@ -138,11 +141,11 @@ var rule = {
             connectWebSocket(hostname, room_id, ttwid);
             // let danmu = `web://${hostUrl}:4201/danmu.html`;
             // return {parse: 0, url: url, danmaku: danmu};
-            return { parse: 0, url: url, danmaku: 'web://' + getProxyUrl() + '&url=danmu.html' };
+            return {parse: 0, url: url, danmaku: 'web://' + getProxyUrl() + '&url=danmu.html'};
         }
     },
     proxy_rule: async function () {
-        let { input, hostname } = this;
+        let {input, hostname} = this;
         // log('hostname:', hostname);
         if (input) {
             input = decodeURIComponent(input);
@@ -243,7 +246,7 @@ function connectWebSocket(hostname, room_id, ttwid) {
                         // let user_name = chatmessage.getUser().getNickname();
                         // let eventTime = chatmessage.getEventtime();
                         let content = chatmessage.getContent();
-                        sendDanmuArray(hostname, [{ text: content }]);
+                        sendDanmuArray(hostname, [{text: content}]);
                         //   console.log(`【${user_name}】:${content}`);
                     }
                 }
@@ -286,7 +289,7 @@ function startServer(hostname) {
     // });
     // fastify的server
     let server = fServer;
-    DMwss = new WebSocketServer({ server });
+    DMwss = new WebSocketServer({server});
     // 监听客户端连接事件
     DMwss.on('connection', (ws, request) => {
         console.log(`Client connected at ${request.url}`);

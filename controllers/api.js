@@ -1,11 +1,45 @@
 import path from 'path';
-import {existsSync} from 'fs';
+import {existsSync, watch} from 'fs';
 import {base64Decode} from '../libs_drpy/crypto-util.js';
 import * as drpy from '../libs/drpyS.js';
 import {ENV} from "../utils/env.js";
 import {validatePwd} from "../utils/api_validate.js";
 
+//添加JSON文件监听  
+let jsonWatcher = null;
+let debounceTimers = new Map(); // 防抖计时器
+function startJsonWatcher(jsonDir) {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    try {
+        jsonWatcher = watch(jsonDir, {recursive: true}, (eventType, filename) => {
+            if (filename && filename.endsWith('.json')) {
+                // 清除之前的计时器  
+                if (debounceTimers.has(filename)) {
+                    clearTimeout(debounceTimers.get(filename));
+                }
+
+                // 设置新的防抖计时器  
+                const timer = setTimeout(() => {
+                    console.log(`${filename}文件已${eventType}，即将清除所有模块缓存`);
+                    drpy.clearAllCache();
+                    debounceTimers.delete(filename);
+                }, 100); // 100ms防抖延迟  
+
+                debounceTimers.set(filename, timer);
+            }
+        });
+
+        console.log(`start json file hot reload success，listening path: ${jsonDir}`);
+    } catch (error) {
+        console.error('start json file listening failed with error:', error);
+    }
+}
+
 export default (fastify, options, done) => {
+    // 启动JSON监听  
+    startJsonWatcher(options.jsonDir);
+
     // 动态加载模块并根据 query 执行不同逻辑
     fastify.route({
         method: ['GET', 'POST'], // 同时支持 GET 和 POST
