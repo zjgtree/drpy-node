@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 0,
+  title: '樱漫'
+})
+*/
+
 var rule = {
     title: '樱漫',
     host: 'https://skr.skr2.cc:666',

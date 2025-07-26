@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: 'KTV歌厅[听]'
+})
+*/
+
 globalThis.post2 = function (_url, _data) {
     // let data = buildUrl(_url,_data).split('?')[1];
     // return post(_url,{body:encodeURIComponent(data),headers:rule.headers});

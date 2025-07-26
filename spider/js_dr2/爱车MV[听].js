@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '爱车MV[听]'
+})
+*/
+
 var rule = {
     title:'爱车MV[听]',
     host:'https://www.ichemv.com',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '雪糕TV'
+})
+*/
+
 class Rule {
     类型 = '影视';
     title = '雪糕TV';

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: 'PTT[优]'
+})
+*/
+
 var rule = {
     类型: '影视',//影视|听书|漫画|小说
     title: 'PTT[优]',

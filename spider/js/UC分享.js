@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: 'UC合集'
+})
+*/
+
 globalThis.getobj = {};
 var rule = {
     author: '迈克,道长',

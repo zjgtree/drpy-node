@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '六月听书[听]'
+})
+*/
+
 function str2binl(d) {
     for (var _ = Array(), m = (1 << 8) - 1, r = 0; r < d.length * 8; r += 8)
         _[r >> 5] |= (d.charCodeAt(r / 8) & m) << r % 32;

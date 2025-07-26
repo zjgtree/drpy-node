@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 1,
+  title: 'Nyafun'
+})
+*/
+
 var rule = {
     类型: '动漫',
     title: 'Nyafun',

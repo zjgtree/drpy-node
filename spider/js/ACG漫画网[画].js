@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: 'ACG漫画网'
+})
+*/
+
 class Rule {
     类型 = "漫画";
     author = "LoyDgIk";

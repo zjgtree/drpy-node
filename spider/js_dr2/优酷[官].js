@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '优酷[官]'
+})
+*/
+
 var rule = {
     title: '优酷[官]',
     host: 'https://www.%79%6f%75%6b%75.com',

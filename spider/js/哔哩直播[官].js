@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '哔哩直播[官]'
+})
+*/
+
 const {getHtml} = $.require('./_lib.request.js')
 var rule = {
     title: '哔哩直播[官]',

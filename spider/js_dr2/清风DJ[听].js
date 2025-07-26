@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '清风DJ[听]'
+})
+*/
+
 var rule = {
     title: '清风DJ[听]',
     host: 'https://www.vvvdj.com',

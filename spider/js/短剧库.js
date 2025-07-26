@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '短剧库'
+})
+*/
+
 var rule = {
   类型: '影视',
   title: '短剧库',

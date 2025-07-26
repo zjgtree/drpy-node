@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '菜狗[官]'
+})
+*/
+
 var rule = {
     title:'菜狗[官]',
     host:'https://waptv.sogou.com',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '红果短剧'
+})
+*/
+
 var rule = {
   title: '红果短剧',
   host: 'https://www.hongguodj.cc/',

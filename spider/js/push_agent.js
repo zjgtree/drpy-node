@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 0,
+  filterable: 0,
+  quickSearch: 0,
+  title: '推送'
+})
+*/
+
 const {getHtml} = $.require('./_lib.request.js')
 const {
     formatPlayUrl,

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '麦田影院'
+})
+*/
+
 var rule = {
   类型: '影视',
   title: '麦田影院',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '番茄小说[书]'
+})
+*/
+
 // http://localhost:5757/api/番茄小说[书]?ac=list&t=主分类&pg=1
 // http://localhost:5757/api/番茄小说[书]?ac=detail&ids=https://fanqienovel.com/page/7431786294105099289
 // http://localhost:5757/api/番茄小说[书]?wd=斩神&pg=2

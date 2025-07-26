@@ -49,7 +49,7 @@ export default (fastify, options, done) => {
         }
 
         try {
-            let result = getOriginalJs(code);
+            let result = await getOriginalJs(code);
             reply.send({success: true, result});
         } catch (error) {
             reply.status(500).send({error: error.message});

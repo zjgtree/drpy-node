@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: '博看听书'
+})
+*/
+
 var rule = {
     类型: '听书',
     title: '博看听书',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 1,
+  title: '星芽短剧'
+})
+*/
+
 // http://localhost:5757/api/星芽短剧?ac=list&t=1&pg=1
 // http://localhost:5757/api/星芽短剧?ac=detail&ids=https://app.whjzjx.cn/v2/theater_parent/detail?theater_parent_id=3523
 // http://localhost:5757/api/星芽短剧?wd=龙王&pg=1

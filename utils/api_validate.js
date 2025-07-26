@@ -1,3 +1,7 @@
+import path from 'path';
+import {readFile} from 'fs/promises';
+import fileHeaderManager from "./fileHeaderManager.js";
+
 // 接口basic验证
 export const validateBasicAuth = (request, reply, done) => {
     if (!process.env.hasOwnProperty('API_AUTH_NAME') && !process.env.hasOwnProperty('API_AUTH_CODE')) {
@@ -59,3 +63,47 @@ export const validatePwd = async (request, reply) => {
         return reply.code(403).send({error: 'Forbidden: Invalid or missing pwd'});
     }
 };
+
+
+// JS文件验证
+export const validateJs = async (request, reply, dr2Dir) => {
+    if (request.url.startsWith('/js/')) {
+        try {
+            const fileName = decodeURIComponent(request.url.replace('/js/', '').split('?')[0]);
+            // console.log('fileName', fileName);
+            // 获取文件系统路径
+            const filePath = path.join(dr2Dir, fileName);
+            // console.log('filePath', filePath);
+
+            // 读取文件内容
+            let content = await readFile(filePath, 'utf8');
+            if (/var rule|function|let |var |const|class Rule|async|this\./.test(content)) {
+                // 添加版权信息
+                const copyright = `/*!
+ * Copyright © ${new Date().getFullYear()} Taoist
+ * Licensed under LGPL3 (https://github.com/hjdhnx/drpy-node/blob/main/LICENSE)
+ */
+`;
+                content = `${copyright}${content}`;
+            } else {
+                content = await fileHeaderManager.removeHeader(content, {
+                    mode: 'top-comments',
+                    fileType: '.js'
+                });
+            }
+
+            // 设置响应头并发送修改后的内容
+            return reply
+                .header('Content-Type', 'application/javascript; charset=utf-8')
+                .send(content);
+
+        } catch (error) {
+            // 文件不存在时继续后续处理（由fastify-static处理404）
+            if (error.code === 'ENOENT') return;
+
+            // 其他错误处理
+            console.error(`File processing error: ${error.message}`);
+            return reply.code(500).send('Internal Server Error');
+        }
+    }
+}

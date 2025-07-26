@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 0,
+  quickSearch: 0,
+  title: 'hdmoli'
+})
+*/
+
 var rule = {
     类型: '影视',
     title: 'hdmoli',

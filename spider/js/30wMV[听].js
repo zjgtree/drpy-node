@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 0,
+  filterable: 1,
+  quickSearch: 0,
+  title: '30wMV'
+})
+*/
+
 const dbName = './data/mv/song.db';  // 数据库路径
 const pageSize = 200; // 每页显示100条记录
 const fixUrl = 'http://em.21dtv.com/songs/';

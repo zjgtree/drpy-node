@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 1,
+  title: '金牌影院'
+})
+*/
+
 // http://localhost:5757/api/金牌影院?ac=list&t=1&pg=1
 // http://localhost:5757/api/金牌影院?ac=detail&ids=/detail/131374
 // http://localhost:5757/api/金牌影院?wd=我的&pg=1

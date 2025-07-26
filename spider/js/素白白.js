@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '素白白'
+})
+*/
+
 // http://localhost:5757/api/素白白?ac=list&t=movie_bt&pg=1
 // http://localhost:5757/api/素白白?ac=detail&ids=57235
 // http://localhost:5757/api/素白白?wd=我的&pg=1

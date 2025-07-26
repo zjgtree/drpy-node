@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 1,
+  title: '全民追剧'
+})
+*/
+
 var rule = {
     类型:'影视',
     title:'全民追剧',

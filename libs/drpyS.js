@@ -8,6 +8,7 @@ import WebSocket, {WebSocketServer} from 'ws';
 import zlib from 'zlib';
 import JSONbig from 'json-bigint';
 import * as minizlib from 'minizlib';
+import forge from "node-forge";
 import '../libs_drpy/es6-extend.js'
 import {getSitesMap} from "../utils/sites-map.js";
 import * as utils from '../utils/utils.js';
@@ -21,15 +22,17 @@ import {Cloud} from "../utils/cloud.js";
 import {Yun} from "../utils/yun.js";
 import {Pan} from "../utils/pan123.js";
 import AIS from '../utils/ais.js';
-// const { req } = await import('../utils/req.js');
-import {gbkTool} from '../libs_drpy/gbk.js'
-// import {atob, btoa, base64Encode, base64Decode, md5} from "../libs_drpy/crypto-util.js";
-import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
+import fileHeaderManager from "../utils/fileHeaderManager.js";
 import {getContentType, getMimeType} from "../utils/mime-type.js";
 import {getParsesDict} from "../utils/file.js";
 import {getFirstLetter} from "../utils/pinyin-tool.js";
 import {reqs} from "../utils/req.js";
 import "../utils/random-http-ua.js";
+
+// const { req } = await import('../utils/req.js');
+import {gbkTool} from '../libs_drpy/gbk.js'
+// import {atob, btoa, base64Encode, base64Decode, md5} from "../libs_drpy/crypto-util.js";
+import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
 import template from '../libs_drpy/template.js'
 import batchExecute from '../libs_drpy/batchExecute.js';
 import '../libs_drpy/abba.js'
@@ -44,7 +47,6 @@ import '../libs_drpy/jinja.js'
 import '../libs_drpy/drpyCustom.js'
 import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
 // import '../libs_drpy/crypto-js-wasm.js'
-import forge from "node-forge";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
@@ -448,7 +450,7 @@ export async function init(filePath, env = {}, refresh) {
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
         // 执行文件内容，将其放入沙箱中
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         // console.log('js_code:', js_code.slice(5000));
         const js_code_wrapper = `
     _asyncGetRule  = (async function() {
@@ -541,7 +543,7 @@ export async function getRuleObject(filePath, env, refresh) {
         log(`Loading RuleObject: ${filePath} fileSize:${fileContent.length}`);
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         const js_code_wrapper = `
     _asyncGetRule  = (async function() {
         ${js_code}
@@ -590,7 +592,7 @@ export async function initJx(filePath, env, refresh) {
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
         // 执行文件内容，将其放入沙箱中
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         const js_code_wrapper = `
     _asyncGetLazy  = (async function() {
         ${js_code}
@@ -616,6 +618,15 @@ export async function initJx(filePath, env, refresh) {
     }
 }
 
+export async function isLoaded() {
+    if (jxCache && jxCache.size > 0) {
+        console.log('Map 不为空,已完成初始化');
+        return true;
+    } else {
+        console.log('Map 为空或未初始化');
+        return false;
+    }
+}
 
 /**
  * 使用临时的上下文调用异步方法，确保每次调用时的上下文 (this) 是独立的。
@@ -1421,11 +1432,14 @@ export async function getJx(filePath) {
  * 获取加密前的原始的js源文本
  * @param js_code
  */
-export function getOriginalJs(js_code) {
-    let current_match = /var rule|[\u4E00-\u9FA5]+|function|let |var |const |\(|\)|"|'/;
+export async function getOriginalJs(js_code) {
+    // let current_match = /var rule|[\u4E00-\u9FA5]+|function|let |var |const |\(|\)|"|'/;
+    let current_match = /var rule|function|let |var |const|class Rule|async|this\./;
     if (current_match.test(js_code)) {
         return js_code
     }
+    console.log('密文源自动去除头信息...');
+    js_code = await fileHeaderManager.removeHeader(js_code, {mode: 'top-comments', fileType: '.js'});
     let rsa_private_key = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCqin/jUpqM6+fgYP/oMqj9zcdHMM0mEZXLeTyixIJWP53lzJV2N2E3OP6BBpUmq2O1a9aLnTIbADBaTulTNiOnVGoNG58umBnupnbmmF8iARbDp2mTzdMMeEgLdrfXS6Y3VvazKYALP8EhEQykQVarexR78vRq7ltY3quXx7cgI0ROfZz5Sw3UOLQJ+VoWmwIxu9AMEZLVzFDQN93hzuzs3tNyHK6xspBGB7zGbwCg+TKi0JeqPDrXxYUpAz1cQ/MO+Da0WgvkXnvrry8NQROHejdLVOAslgr6vYthH9bKbsGyNY3H+P12kcxo9RAcVveONnZbcMyxjtF5dWblaernAgMBAAECggEAGdEHlSEPFmAr5PKqKrtoi6tYDHXdyHKHC5tZy4YV+Pp+a6gxxAiUJejx1hRqBcWSPYeKne35BM9dgn5JofgjI5SKzVsuGL6bxl3ayAOu+xXRHWM9f0t8NHoM5fdd0zC3g88dX3fb01geY2QSVtcxSJpEOpNH3twgZe6naT2pgiq1S4okpkpldJPo5GYWGKMCHSLnKGyhwS76gF8bTPLoay9Jxk70uv6BDUMlA4ICENjmsYtd3oirWwLwYMEJbSFMlyJvB7hjOjR/4RpT4FPnlSsIpuRtkCYXD4jdhxGlvpXREw97UF2wwnEUnfgiZJ2FT/MWmvGGoaV/CfboLsLZuQKBgQDTNZdJrs8dbijynHZuuRwvXvwC03GDpEJO6c1tbZ1s9wjRyOZjBbQFRjDgFeWs9/T1aNBLUrgsQL9c9nzgUziXjr1Nmu52I0Mwxi13Km/q3mT+aQfdgNdu6ojsI5apQQHnN/9yMhF6sNHg63YOpH+b+1bGRCtr1XubuLlumKKscwKBgQDOtQ2lQjMtwsqJmyiyRLiUOChtvQ5XI7B2mhKCGi8kZ+WEAbNQcmThPesVzW+puER6D4Ar4hgsh9gCeuTaOzbRfZ+RLn3Aksu2WJEzfs6UrGvm6DU1INn0z/tPYRAwPX7sxoZZGxqML/z+/yQdf2DREoPdClcDa2Lmf1KpHdB+vQKBgBXFCVHz7a8n4pqXG/HvrIMJdEpKRwH9lUQS/zSPPtGzaLpOzchZFyQQBwuh1imM6Te+VPHeldMh3VeUpGxux39/m+160adlnRBS7O7CdgSsZZZ/dusS06HAFNraFDZf1/VgJTk9BeYygX+AZYu+0tReBKSs9BjKSVJUqPBIVUQXAoGBAJcZ7J6oVMcXxHxwqoAeEhtvLcaCU9BJK36XQ/5M67ceJ72mjJC6/plUbNukMAMNyyi62gO6I9exearecRpB/OGIhjNXm99Ar59dAM9228X8gGfryLFMkWcO/fNZzb6lxXmJ6b2LPY3KqpMwqRLTAU/zy+ax30eFoWdDHYa4X6e1AoGAfa8asVGOJ8GL9dlWufEeFkDEDKO9ww5GdnpN+wqLwePWqeJhWCHad7bge6SnlylJp5aZXl1+YaBTtOskC4Whq9TP2J+dNIgxsaF5EFZQJr8Xv+lY9lu0CruYOh9nTNF9x3nubxJgaSid/7yRPfAGnsJRiknB5bsrCvgsFQFjJVs=';
     let decode_content = '';
 

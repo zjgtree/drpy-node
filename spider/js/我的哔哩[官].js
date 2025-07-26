@@ -23,8 +23,13 @@
  * 此时哔哩.js这个解析可用于此源的解析线路用
  * 传参 ?render=1&type=url&params=../json/哔哩教育.json@哔哩教育[官]
  * 传参 ?render=1&type=url&params=../json/哔哩大全.json@哔哩大全[官]
- */
-var rule = {
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '我的哔哩[官]'
+})
+*/var rule = {
     title: '我的哔哩[官]',
     host: 'https://api.bilibili.com',
     homeUrl: '/x/web-interface/ranking/v2?rid=0&type=origin',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 1,
+  title: '玩偶哥哥[盘]'
+})
+*/
+
 const {getHtml} = $.require('./_lib.request.js')
 const {
     formatPlayUrl,

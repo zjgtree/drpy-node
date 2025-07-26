@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '番薯动漫'
+})
+*/
+
 // http://localhost:5757/api/番薯动漫[漫]?ac=list&t=1&pg=1
 // http://localhost:5757/api/番薯动漫[漫]?ac=detail&ids=/voddetail/USJJJJJk.html
 // http://localhost:5757/api/番薯动漫[漫]?wd=我的&pg=1

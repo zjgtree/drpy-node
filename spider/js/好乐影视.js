@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 0,
+  title: '好乐影视'
+})
+*/
+
 var rule = {
     类型: '影视',
     title: '好乐影视',

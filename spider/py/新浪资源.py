@@ -1,3 +1,12 @@
+"""
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 1,
+  title: '新浪CMS'
+})
+"""
+
 # coding=utf-8
 # !/usr/bin/python
 import sys

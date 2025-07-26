@@ -1,15 +1,28 @@
-/**仅供测试**/
-// const WebSocket = require('ws');
+/**仅供测试*
+@header({
+  title: '抖音直播',
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 0
+})
+*/// const WebSocket = require('ws');
 // const WebSocketServer = WebSocket.Server;
 // const zlib = require('zlib');
 const url = require('url');
-const fs = require('fs');
-const http = require('http');
+// const fs = require('fs');
+// const http = require('http');
 const {get_sign, getDmHtml} = require('./_lib.douyin_sign.cjs');
 // const douyin_pb = fs.readFileSync('./spider/js/_lib.douyin_pb.cjs', 'utf8');
-const douyin_pb = pathLib.readLib('./_lib.douyin_pb.cjs', 'utf8');
-console.log('douyin_pb:', douyin_pb.length);
-eval(douyin_pb);
+// const douyin_pb = pathLib.readLib('./_lib.douyin_pb.cjs', 'utf8');
+// console.log('douyin_pb:', douyin_pb.length);
+// eval(douyin_pb);
+function init_douyin_pb() {
+    const douyin_pb = pathLib.readLib('./_lib.douyin_pb.cjs', 'utf8');
+    console.log('douyin_pb:', douyin_pb.length);
+    eval(douyin_pb);
+}
+
+init_douyin_pb();
 
 var rule = {
     类型: '影视',
@@ -33,6 +46,7 @@ var rule = {
         return []
     },
     预处理: async function () {
+        // init_douyin_pb();
         let ck = (await axios({url: rule.host})).headers['set-cookie'];
         const regex = /ttwid=([^;]+)/;
         const match = ck[0].match(regex);

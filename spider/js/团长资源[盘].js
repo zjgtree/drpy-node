@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 1,
+  title: '团长资源[盘]'
+})
+*/
+
 const {getHtml} = $.require('./_lib.request.js')
 const {get_waf} = $.require('./_lib.waf.js')
 const {

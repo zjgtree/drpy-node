@@ -11,9 +11,13 @@
  * 传参 ?type=url&params=../json/采集[zy]静态.json$1@采王zy[密]
  * 传参 ?type=url&params=../json/采集[密]静态.json@采王成人[密]
  * [{"name":"暴风资源","url":"https://bfzyapi.com","parse_url":""},{"name":"飞刀资源","url":"http://www.feidaozy.com","parse_url":""},{"name":"黑木耳资源","url":"https://www.heimuer.tv","parse_url":""}]
- */
-
-var rule = {
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 0,
+  title: '采集之王[合]'
+})
+*/var rule = {
     title: '采集之王[合]',
     author: '道长',
     version: '20240706 beta17',

@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 0,
+  title: '人人视频'
+})
+*/
+
 // http://localhost:5757/api/人人视频?ac=list&t=1&pg=1
 // http://localhost:5757/api/人人视频?ac=detail&ids=447
 // http://localhost:5757/api/人人视频?wd=&pg=1

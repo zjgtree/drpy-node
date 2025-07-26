@@ -1,3 +1,13 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 0,
+  title: '点歌欢唱[B]',
+  logo: 'https://tva1.sinaimg.cn/crop.6.7.378.378.1024/a22d2331jw8f6hs4xrb4kj20ay0ayacy.jpg'
+})
+*/
+
 var mv_list = [];
 var authors = [];
 var authorsPy = {};

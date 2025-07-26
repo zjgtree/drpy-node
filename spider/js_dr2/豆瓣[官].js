@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 1,
+  title: '豆瓣[官]'
+})
+*/
+
 var rule = {
     title:'豆瓣[官]',
     host:'https://frodo.douban.com',

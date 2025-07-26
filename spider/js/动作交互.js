@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 0,
+  filterable: 0,
+  quickSearch: 0,
+  title: '动作交互'
+})
+*/
+
 const {action_data, generateUUID} = $.require('./_lib.action.js');
 
 // 访问测试 http://127.0.0.1:5757/api/动作交互?ac=action&action=set-cookie

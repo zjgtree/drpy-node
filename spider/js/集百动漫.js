@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 1,
+  filterable: 0,
+  quickSearch: 0,
+  title: '集百动漫'
+})
+*/
+
 var rule = {
     类型: '影视',
     title: '集百动漫',

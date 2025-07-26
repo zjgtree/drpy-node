@@ -1,3 +1,12 @@
+/*
+@header({
+  searchable: 0,
+  filterable: 0,
+  quickSearch: 0,
+  title: '美颜怪'
+})
+*/
+
 class Rule {
     类型 = "影视";
     author = "LoyDgIk";
