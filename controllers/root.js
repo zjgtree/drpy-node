@@ -32,7 +32,7 @@ export default (fastify, options, done) => {
         const markdownContent = readFileSync(readmePath, 'utf-8');
 
         // 将 Markdown 转换为 HTML
-        const htmlContent = marked.parse(markdownContent);
+        const htmlContent = marked.parse(markdownContent).replaceAll('$pwd', process.env.API_PWD || '');
         const indexHtml = `
                 <!DOCTYPE html>
                 <html lang="en">

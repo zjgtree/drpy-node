@@ -10,8 +10,8 @@
                     <h1 id="drpysdrpy-node">drpyS(drpy-node)</h1>
 <p>nodejs作为服务端的drpy实现。全面升级异步写法<br><del>积极开发中，每日一更</del>，当前进度 <code>55%</code><br>找工作中，随缘更新</p>
 <ul>
-<li><a href="/config?pwd=">本地配置接口-动态本地</a></li>
-<li><a href="/config/1?pwd=">本地配置接口-动态外网/局域网</a></li>
+<li><a href="/config?pwd=dzyyds">本地配置接口-动态本地</a></li>
+<li><a href="/config/1?pwd=dzyyds">本地配置接口-动态外网/局域网</a></li>
 <li><a href="/docs/sub.md">其他配置接口-订阅过滤</a></li>
 <li><a href="/admin/encoder">代码加解密工具</a></li>
 <li><a href="/authcoder?len=10&amp;number=1">V我50支付凭证生成器</a></li>
@@ -24,8 +24,13 @@
 <li><a href="/cat/index.html">在线猫ds源主页</a></li>
 </ul>
 <h2 id="更新记录">更新记录</h2>
+<h3 id="20250727">20250727</h3>
+<p>更新至V1.2.1</p>
 <h3 id="20250726">20250726</h3>
 <p>更新至V1.2.0</p>
+<ol>
+<li>支持挂载py源</li>
+</ol>
 <h3 id="20250310">20250310</h3>
 <p>更新至V1.1.23</p>
 <p><a href="docs/updateRecord.md">点此查看完整更新记录</a></p>
@@ -59,6 +64,7 @@
 <h2 id="问题说明">问题说明</h2>
 <ol>
 <li>windows上直接运行index.js可能会发现运行过程中的日志打印出中文乱码。建议通过yarn dev运行或者在package.json里点击dev脚本运行</li>
+<li><code>pinyin</code> 库依赖的 <code>nodejieba</code> 跑路了现在无法完成安装</li>
 </ol>
 <h2 id="安装说明">安装说明</h2>
 <p>1.zy安装方案</p>

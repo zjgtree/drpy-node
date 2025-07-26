@@ -67,7 +67,17 @@ class Pan123 {
     }
 
     getShareData(url){
+        this.SharePwd = ''
         url = decodeURIComponent(url);
+        if(url.indexOf('提取码') > 0 && url.indexOf('?')<0){
+            url = url.replace(/提取码:|提取码|提取码：/g,'?')
+        }
+        if(url.indexOf('提取码')>0 && url.indexOf('?')>0){
+            url = url.replace(/提取码:|提取码|提取码：|/g,'')
+        }
+        if(url.indexOf('：')>0){
+            url = url.replace('：','')
+        }
         const matches = this.regex.exec(url);
         if(url.indexOf('?') > 0){
             this.SharePwd = url.split('?')[1].match(/[A-Za-z0-9]+/)[0];
@@ -76,6 +86,8 @@ class Pan123 {
         if (matches) {
             if(matches[2].indexOf('?') > 0){
                 return matches[2].split('?')[0]
+            }else if(matches[2].indexOf('html') > 0) {
+                return matches[2].replace('.html', '')
             }else {
                 return  matches[2].match(/www/g)?matches[1]:matches[2];
             }
@@ -109,18 +121,8 @@ class Pan123 {
 
     async getShareInfo(shareKey,SharePwd,next,ParentFileId) {
         let cate = []
-        let list = await axios.get(this.api+"get",{
+        let list = await axios.get(this.api+`get?limit=100&next=${next}&orderBy=file_name&orderDirection=asc&shareKey=${shareKey.trim()}&SharePwd=${SharePwd||''}&ParentFileId=${ParentFileId}&Page=1`,{
             headers: {},
-            params: {
-                "limit": "100",
-                "next": next,
-                "orderBy": "file_name",
-                "orderDirection": "asc",
-                "shareKey": shareKey,
-                "SharePwd": SharePwd,
-                "ParentFileId": ParentFileId,
-                "Page": "1"
-            }
         });
         if(list.status === 200){
             if(list.data.code === 5103){
@@ -140,6 +142,19 @@ class Pan123 {
                         });
                     }
                 })
+                if(cate.length === 0){
+                    infoList.forEach(item => {
+                        if(item.Category === 2){
+                            cate.push({
+                                filename:item.FileName,
+                                shareKey:shareKey,
+                                SharePwd:SharePwd,
+                                next:next,
+                                fileId:item.FileId
+                            });
+                        }
+                    })
+                }
                 let result =  await Promise.all(cate.map(async (it)=> this.getShareInfo(shareKey,SharePwd,next, it.fileId)));
                 result = result.filter(item => item !== undefined && item !== null);
                 return [...cate,...result.flat()];
@@ -149,20 +164,28 @@ class Pan123 {
 
     async getShareList(shareKey,SharePwd,next,ParentFileId) {
         let video = []
-        let infoList = (await axios.get(this.api+"get",{
-            headers: {},
-            params: {
-                "limit": "100",
-                "next": next,
-                "orderBy": "file_name",
-                "orderDirection": "asc",
-                "shareKey": shareKey,
-                "SharePwd": SharePwd,
-                "ParentFileId": ParentFileId,
-                "Page": "1"
-            }
-        })).data.data.InfoList;
-        infoList.forEach(it=>{
+        let link = this.api+`get?limit=100&next=${next}&orderBy=file_name&orderDirection=asc&shareKey=${shareKey.trim()}&SharePwd=${SharePwd||''}&ParentFileId=${ParentFileId}&Page=1`
+        let infoList = (await axios.request({
+            method:'get',
+            url:link,
+            headers: {
+
+            },
+        })).data;
+        if(infoList.data.Next === ''){
+            let list = await this.getShareList(shareKey, SharePwd, 0, 0)
+            list.forEach(it=>{
+                video.push({
+                    ShareKey: shareKey,
+                    FileId: it.FileId,
+                    S3KeyFlag: it.S3KeyFlag,
+                    Size: it.Size,
+                    Etag: it.Etag,
+                    FileName: it.FileName,
+                })
+            })
+        }
+        infoList.data.InfoList.forEach(it=>{
             if(it.Category === 2){
                 video.push({
                     ShareKey: shareKey,
@@ -219,17 +242,20 @@ class Pan123 {
                 "shareKey": shareKey
             }
         };
-        let down = (await axios.request(config)).data.data.video_play_info
-        let videoinfo = []
-        down.forEach(item => {
-            if(item.url!==''){
-                videoinfo.push({
-                    name:item.resolution,
-                    url:item.url
-                })
-            }
-        })
-        return videoinfo;
+        let down = (await axios.request(config)).data.data
+        if(down?.video_play_info){
+            let videoinfo = []
+            down.video_play_info.forEach(item => {
+                if(item.url!==''){
+                    videoinfo.push({
+                        name:item.resolution,
+                        url:item.url
+                    })
+                }
+            })
+            return videoinfo;
+        }
+        return []
     }
 }
 

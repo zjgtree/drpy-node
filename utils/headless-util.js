@@ -7,9 +7,14 @@ class PuppeteerHelper {
     }
 
     async gotoHtml(config) {
+        let proxy = ''
+        if(config.proxy){
+            proxy = 'http://127.0.0.1:7897';
+        }
         this.browser = await puppeteer.launch({
             headless: config.headless || true,
-            executablePath: process.env.CHROME_PATH
+            // executablePath: process.env.CHROME_PATH,
+            args: [`--proxy-server=${proxy}`]
         }); // 可以设置为true以无头模式运行
         this.page = await this.browser.newPage();
         await this.page.setExtraHTTPHeaders(config.headers || {

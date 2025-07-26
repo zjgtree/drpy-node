@@ -80,6 +80,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     //以上为自定义APP[模板]配置自动添加代码
 
     let link_jar = '';
+    let enableRuleName = ENV.get('enable_rule_name', '0') === '1';
     // console.log('hide_adult:', ENV.get('hide_adult'));
     if (ENV.get('hide_adult') === '1') {
         valid_files = valid_files.filter(it => !(new RegExp('\\[[密]\\]|密+')).test(it));
@@ -104,7 +105,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 } catch (e) {
                     throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                 }
-                ruleObject.title = ruleObject.title || baseName;
+                ruleObject.title = enableRuleName ? ruleObject.title || baseName : baseName;
 
                 let fileSites = [];
                 if (baseName === 'push_agent') {
@@ -188,7 +189,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     } catch (e) {
                         throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                     }
-                    ruleObject.title = ruleObject.title || baseName;
+                    ruleObject.title = enableRuleName ? ruleObject.title || baseName : baseName;
 
                     let fileSites = [];
                     if (baseName === 'push_agent') {
@@ -259,7 +260,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         quickSearch: 1, // 固定值
                     };
                     const fileContent = await readFile(path.join(pyDir, file), 'utf-8');
-                    ruleObject.title = extractNameFromCode(fileContent) || baseName;
+                    ruleObject.title = enableRuleName ? extractNameFromCode(fileContent) || baseName : baseName;
 
                     let fileSites = [];
                     if (baseName === 'push_agent') {

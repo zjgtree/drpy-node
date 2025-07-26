@@ -88,3 +88,5 @@ var rule = {
 * 2:确定和取消
 * 3.确定、取消、重置
 * 4.确定、取消、重置、预览
+
+<img alt="详情见图" src="./images/action.jpg" width="100%"/>

@@ -101,6 +101,14 @@ registerRoutes(fastify, {
     subFilePath: path.join(__dirname, 'public/sub/sub.json'),
 });
 
+process.on('unhandledRejection', (err) => {
+    fastify.log.error(`未处理的Promise拒绝:${err.message}`);
+    console.log(`发生了致命的错误，已阻止进程崩溃。${err.stack}`);
+    // 根据情况决定是否退出进程
+    // 清理后退出进程（避免程序处于未知状态）
+    // process.exit(1);
+});
+
 // 启动服务
 const start = async () => {
     try {

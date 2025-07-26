@@ -4,8 +4,8 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 ~~积极开发中，每日一更~~，当前进度 `55%`  
 找工作中，随缘更新
 
-* [本地配置接口-动态本地](/config?pwd=)
-* [本地配置接口-动态外网/局域网](/config/1?pwd=)
+* [本地配置接口-动态本地](/config?pwd=$pwd)
+* [本地配置接口-动态外网/局域网](/config/1?pwd=$pwd)
 * [其他配置接口-订阅过滤](/docs/sub.md)
 * [代码加解密工具](/admin/encoder)
 * [V我50支付凭证生成器](/authcoder?len=10&number=1)
@@ -18,6 +18,10 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [在线猫ds源主页](/cat/index.html)
 
 ## 更新记录
+
+### 20250727
+
+更新至V1.2.1
 
 ### 20250726
 
@@ -65,6 +69,8 @@ todo:
 ## 问题说明
 
 1. windows上直接运行index.js可能会发现运行过程中的日志打印出中文乱码。建议通过yarn dev运行或者在package.json里点击dev脚本运行
+2. `pinyin` 库依赖的 `nodejieba` 跑路了现在无法完成安装
+3. `new Promise` 里发生的错误无法被外部try catch 导致程序崩溃，如 `番薯动漫.js` 里的写法
 
 ## 安装说明
 

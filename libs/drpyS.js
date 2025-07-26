@@ -28,6 +28,7 @@ import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt
 import {getContentType, getMimeType} from "../utils/mime-type.js";
 import {getParsesDict} from "../utils/file.js";
 import {getFirstLetter} from "../utils/pinyin-tool.js";
+import {reqs} from "../utils/req.js";
 import "../utils/random-http-ua.js";
 import template from '../libs_drpy/template.js'
 import batchExecute from '../libs_drpy/batchExecute.js';
@@ -43,12 +44,15 @@ import '../libs_drpy/jinja.js'
 import '../libs_drpy/drpyCustom.js'
 import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
 // import '../libs_drpy/crypto-js-wasm.js'
+import forge from "node-forge";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/js');
 
+globalThis.reqs = reqs;
+globalThis.forge = forge
 globalThis.misc = misc;
 globalThis.utils = utils;
 globalThis.COOKIE = COOKIE;
@@ -170,6 +174,7 @@ try {
 
 let simplecc = null;
 try {
+    // 尝试动态导入模块puppeteerHelper
     const simWasm = await import('simplecc-wasm');  // 使用动态 import
     simplecc = simWasm.simplecc;
     console.log('simplecc imported successfully');
@@ -221,7 +226,10 @@ export async function getSandbox(env = {}) {
         getProxyUrl,
         hostUrl,
         fServer,
-        getContentType, getMimeType, getParsesDict, getFirstLetter
+        getContentType,
+        getMimeType,
+        getParsesDict,
+        getFirstLetter
     };
     const drpySanbox = {
         jsp,
@@ -294,6 +302,7 @@ export async function getSandbox(env = {}) {
         parseQueryString,
         encodeIfContainsSpecialChars,
         objectToQueryString,
+        forge
     };
 
     const libsSanbox = {
@@ -1021,6 +1030,23 @@ async function cateParse(rule, tid, pg, filter, extend) {
         url = url.split('[')[1].split(']')[0];
     } else if (pg > 1 && url.includes('[') && url.includes(']')) {
         url = url.split('[')[0];
+    }
+    if (rule.filter_def && typeof (rule.filter_def) === 'object') {
+        try {
+            if (Object.keys(rule.filter_def).length > 0 && rule.filter_def.hasOwnProperty(tid)) {
+                let self_fl_def = rule.filter_def[tid];
+                if (self_fl_def && typeof (self_fl_def) === 'object') {
+                    let k = [Object.keys(self_fl_def)][0]
+                    k.forEach(k => {
+                        if (!extend.hasOwnProperty(k)) {
+                            extend[k] = self_fl_def[k];
+                        }
+                    })
+                }
+            }
+        } catch (e) {
+            log(`合并不同分类对应的默认筛选出错:${e.message}`);
+        }
     }
     if (rule.filter_url) {
         if (!/fyfilter/.test(url)) {
