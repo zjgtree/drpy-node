@@ -124,7 +124,10 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     });
                     // console.log('ds ruleMeta:', ruleMeta);
                     await FileHeaderManager.writeHeader(filePath, ruleMeta);
-                } else if (!isLoaded) {
+                } else {
+                    Object.assign(ruleMeta, header);
+                }
+                if (!isLoaded) {
                     const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
                     console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
                 }
@@ -222,7 +225,10 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         });
                         // console.log('dr2 ruleMeta:', ruleMeta);
                         await FileHeaderManager.writeHeader(filePath, ruleMeta);
-                    } else if (!isLoaded) {
+                    } else {
+                        Object.assign(ruleMeta, header);
+                    }
+                    if (!isLoaded) {
                         const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
                         console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
                     }
@@ -304,7 +310,10 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         });
                         // console.log('py ruleMeta:', ruleMeta);
                         await FileHeaderManager.writeHeader(filePath, ruleMeta);
-                    } else if (!isLoaded) {
+                    } else {
+                        Object.assign(ruleMeta, header);
+                    }
+                    if (!isLoaded) {
                         const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
                         console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
                     }

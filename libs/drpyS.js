@@ -540,7 +540,7 @@ export async function getRuleObject(filePath, env, refresh) {
                 return cached.ruleObject;
             }
         }
-        log(`Loading RuleObject: ${filePath} fileSize:${fileContent.length}`);
+        // log(`Loading RuleObject: ${filePath} fileSize:${fileContent.length}`);
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
         const js_code = await getOriginalJs(fileContent);
