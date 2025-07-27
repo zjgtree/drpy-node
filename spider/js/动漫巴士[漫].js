@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '动漫巴士'
+  title: '动漫巴士',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '腾云驾雾[官]'
+  title: '腾云驾雾[官]',
+  lang: 'ds'
 })
 */
 

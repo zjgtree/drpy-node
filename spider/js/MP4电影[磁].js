@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: 'MP4电影'
+  title: 'MP4电影',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '色花堂'
+  title: '色花堂',
+  lang: 'ds'
 })
 */
 

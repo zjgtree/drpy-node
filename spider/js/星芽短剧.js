@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 1,
-  title: '星芽短剧'
+  title: '星芽短剧',
+  lang: 'ds'
 })
 */
 

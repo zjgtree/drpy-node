@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '哔哩直播[官]'
+  title: '哔哩直播[官]',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: '集百动漫'
+  title: '集百动漫',
+  lang: 'ds'
 })
 */
 

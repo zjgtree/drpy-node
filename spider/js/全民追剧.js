@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 1,
-  title: '全民追剧'
+  title: '全民追剧',
+  lang: 'ds'
 })
 */
 

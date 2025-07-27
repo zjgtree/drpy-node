@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '短剧库'
+  title: '短剧库',
+  lang: 'ds'
 })
 */
 

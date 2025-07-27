@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '番薯动漫'
+  title: '番薯动漫',
+  lang: 'ds'
 })
 */
 

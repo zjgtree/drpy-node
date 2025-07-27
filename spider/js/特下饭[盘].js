@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '特下饭[盘]'
+  title: '特下饭[盘]',
+  lang: 'ds'
 })
 */
 

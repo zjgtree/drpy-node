@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '雪糕TV'
+  title: '雪糕TV',
+  lang: 'ds'
 })
 */
 

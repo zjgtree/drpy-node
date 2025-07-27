@@ -15,7 +15,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '采集之王[合]'
+  title: '采集之王[合]',
+  lang: 'ds'
 })
 */var rule = {
     title: '采集之王[合]',

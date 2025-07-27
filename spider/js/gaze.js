@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: 'GAZE'
+  title: 'GAZE',
+  lang: 'ds'
 })
 */
 

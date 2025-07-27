@@ -6,7 +6,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '荐片'
+  title: '荐片',
+  lang: 'ds'
 })
 */var rule = {
     title: '荐片',

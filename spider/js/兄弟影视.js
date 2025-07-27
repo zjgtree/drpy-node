@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '兄弟影视'
+  title: '兄弟影视',
+  lang: 'ds'
 })
 */
 

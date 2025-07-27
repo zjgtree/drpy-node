@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 1,
-  title: '豆瓣[官]'
+  title: '豆瓣[官]',
+  lang: 'dr2'
 })
 */
 

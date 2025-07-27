@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: '播客[听]'
+  title: '播客[听]',
+  lang: 'dr2'
 })
 */
 

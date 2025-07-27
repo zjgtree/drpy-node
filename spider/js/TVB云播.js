@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 2,
-  title: 'TVB云播'
+  title: 'TVB云播',
+  lang: 'ds'
 })
 */
 

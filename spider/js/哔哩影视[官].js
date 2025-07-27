@@ -18,7 +18,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '哔哩影视[官]'
+  title: '哔哩影视[官]',
+  lang: 'ds'
 })
 */var rule = {
     title: '哔哩影视[官]',

@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: 'AppShark模板'
+  title: 'AppShark模板',
+  lang: 'ds'
 })
 */
 

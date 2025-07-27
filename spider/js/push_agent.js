@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: '推送'
+  title: '推送',
+  lang: 'ds'
 })
 */
 

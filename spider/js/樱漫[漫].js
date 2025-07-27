@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: '樱漫'
+  title: '樱漫',
+  lang: 'ds'
 })
 */
 

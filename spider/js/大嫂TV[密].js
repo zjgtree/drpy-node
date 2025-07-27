@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '大嫂TV'
+  title: '大嫂TV',
+  lang: 'ds'
 })
 */
 

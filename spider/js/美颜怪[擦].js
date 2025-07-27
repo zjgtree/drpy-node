@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: '美颜怪'
+  title: '美颜怪',
+  lang: 'ds'
 })
 */
 

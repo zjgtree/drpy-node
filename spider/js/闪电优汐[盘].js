@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '闪电优汐[盘]'
+  title: '闪电优汐[盘]',
+  lang: 'ds'
 })
 */
 

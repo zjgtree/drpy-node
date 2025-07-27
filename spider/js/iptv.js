@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: 'iptv'
+  title: 'iptv',
+  lang: 'ds'
 })
 */
 

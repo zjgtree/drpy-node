@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: 'xvideos涩涩'
+  title: 'xvideos涩涩',
+  lang: 'ds'
 })
 */
 

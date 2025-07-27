@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '草榴社区'
+  title: '草榴社区',
+  lang: 'ds'
 })
 */
 

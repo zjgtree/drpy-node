@@ -27,7 +27,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '我的哔哩[官]'
+  title: '我的哔哩[官]',
+  lang: 'ds'
 })
 */var rule = {
     title: '我的哔哩[官]',

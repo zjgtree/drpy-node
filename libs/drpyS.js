@@ -302,6 +302,7 @@ export async function getSandbox(env = {}) {
         buildUrl,
         keysToLowerCase,
         parseQueryString,
+        buildQueryString,
         encodeIfContainsSpecialChars,
         objectToQueryString,
         forge

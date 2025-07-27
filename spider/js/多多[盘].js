@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '多多[盘]'
+  title: '多多[盘]',
+  lang: 'ds'
 })
 */
 

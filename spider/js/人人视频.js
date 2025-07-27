@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '人人视频'
+  title: '人人视频',
+  lang: 'ds'
 })
 */
 

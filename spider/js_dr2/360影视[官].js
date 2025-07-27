@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '360影视[官]'
+  title: '360影视[官]',
+  lang: 'dr2'
 })
 */
 

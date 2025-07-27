@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 1,
-  title: '新浪CMS'
+  title: '新浪CMS',
+  lang: 'hipy'
 })
 """
 

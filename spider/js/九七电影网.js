@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '九七电影网'
+  title: '九七电影网',
+  lang: 'ds'
 })
 */
 

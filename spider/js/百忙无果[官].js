@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '百忙无果[官]'
+  title: '百忙无果[官]',
+  lang: 'ds'
 })
 */
 

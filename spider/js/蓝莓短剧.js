@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 1,
-  title: '蓝莓短剧'
+  title: '蓝莓短剧',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '瓜子H5'
+  title: '瓜子H5',
+  lang: 'ds'
 })
 */
 

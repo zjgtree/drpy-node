@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '番茄小说[书]'
+  title: '番茄小说[书]',
+  lang: 'ds'
 })
 */
 

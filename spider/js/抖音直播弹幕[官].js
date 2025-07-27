@@ -1,9 +1,10 @@
 /**仅供测试*
 @header({
-  title: '抖音直播',
   searchable: 1,
   filterable: 1,
-  quickSearch: 0
+  quickSearch: 0,
+  title: '抖音直播',
+  lang: 'ds'
 })
 */// const WebSocket = require('ws');
 // const WebSocketServer = WebSocket.Server;

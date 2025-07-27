@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '木偶[盘]'
+  title: '木偶[盘]',
+  lang: 'ds'
 })
 */
 

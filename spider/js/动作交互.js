@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: '动作交互'
+  title: '动作交互',
+  lang: 'ds'
 })
 */
 

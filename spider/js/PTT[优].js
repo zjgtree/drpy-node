@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: 'PTT[优]'
+  title: 'PTT[优]',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '七度空间'
+  title: '七度空间',
+  lang: 'ds'
 })
 */
 

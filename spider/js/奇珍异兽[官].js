@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '奇珍异兽[官]'
+  title: '奇珍异兽[官]',
+  lang: 'ds'
 })
 */
 

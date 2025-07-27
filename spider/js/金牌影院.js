@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 1,
-  title: '金牌影院'
+  title: '金牌影院',
+  lang: 'ds'
 })
 */
 

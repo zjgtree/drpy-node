@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '六月听书[听]'
+  title: '六月听书[听]',
+  lang: 'dr2'
 })
 */
 

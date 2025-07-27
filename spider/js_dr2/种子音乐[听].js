@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '种子音乐[听]'
+  title: '种子音乐[听]',
+  lang: 'dr2'
 })
 */
 

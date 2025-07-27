@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '凡客TV'
+  title: '凡客TV',
+  lang: 'ds'
 })
 */
 

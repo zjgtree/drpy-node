@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '爱车MV[听]'
+  title: '爱车MV[听]',
+  lang: 'dr2'
 })
 */
 

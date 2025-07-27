@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 1,
-  title: '小米盘搜'
+  title: '小米盘搜',
+  lang: 'ds'
 })
 */
 

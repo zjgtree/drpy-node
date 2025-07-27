@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -47,7 +47,7 @@
     "pinyin": "^4.0.0",
     "qs": "^6.13.1",
     "queue": "^7.0.0",
-    "rotating-file-stream": "^3.2.5",
+    "rotating-file-stream": "^3.2.6",
     "simplecc-wasm": "^1.1.0",
     "sync-fetch": "^0.6.0-2",
     "tunnel": "^0.0.6",

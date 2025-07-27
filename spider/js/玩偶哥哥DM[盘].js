@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 1,
-  title: '玩偶哥哥[盘]'
+  title: '玩偶哥哥[盘]',
+  lang: 'ds'
 })
 */
 

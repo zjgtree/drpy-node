@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 1,
   quickSearch: 0,
-  title: '30wMV'
+  title: '30wMV',
+  lang: 'ds'
 })
 */
 

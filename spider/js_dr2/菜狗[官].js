@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '菜狗[官]'
+  title: '菜狗[官]',
+  lang: 'dr2'
 })
 */
 

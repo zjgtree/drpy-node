@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: '伊甸园'
+  title: '伊甸园',
+  lang: 'ds'
 })
 */
 

@@ -17,7 +17,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '直播转点播[合]'
+  title: '直播转点播[合]',
+  lang: 'ds'
 })
 */const __ext = {data_dict: {}};
 var rule = {

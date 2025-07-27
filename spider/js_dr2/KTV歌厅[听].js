@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: 'KTV歌厅[听]'
+  title: 'KTV歌厅[听]',
+  lang: 'dr2'
 })
 */
 

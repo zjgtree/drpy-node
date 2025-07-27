@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '酷我听书[听]'
+  title: '酷我听书[听]',
+  lang: 'dr2'
 })
 */
 

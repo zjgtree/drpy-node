@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: '火车太堵'
+  title: '火车太堵',
+  lang: 'ds'
 })
 */
 

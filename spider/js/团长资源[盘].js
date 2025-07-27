@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 1,
-  title: '团长资源[盘]'
+  title: '团长资源[盘]',
+  lang: 'ds'
 })
 */
 

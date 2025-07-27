@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: 'Appget[模板]'
+  title: 'Appget[模板]',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: '鬼片之家'
+  title: '鬼片之家',
+  lang: 'ds'
 })
 */
 

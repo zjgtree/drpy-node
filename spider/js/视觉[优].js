@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '视觉'
+  title: '视觉',
+  lang: 'ds'
 })
 */
 

@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 0,
   quickSearch: 0,
-  title: '黑料不打烊[密]'
+  title: '黑料不打烊[密]',
+  lang: 'ds'
 })
 */
 

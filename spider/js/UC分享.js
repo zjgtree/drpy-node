@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 0,
   quickSearch: 0,
-  title: 'UC合集'
+  title: 'UC合集',
+  lang: 'ds'
 })
 */
 

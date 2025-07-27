@@ -12,7 +12,8 @@
         action: '{\'actionId\':\'单选菜单\',\'type\':\'menu\',\'title\':\'Action菜单\',\'width\':500,\'column\':1,\'option\':[\'导入分享配置$menu1\',\'分享APP配置$menu2\'],\'selectedIndex\':0}'
       }
     ]
-  }
+  },
+  lang: 'ds'
 })
 */
 

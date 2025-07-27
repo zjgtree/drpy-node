@@ -3,7 +3,8 @@
   searchable: 0,
   filterable: 0,
   quickSearch: 0,
-  title: '雷鲸小站[盘]'
+  title: '雷鲸小站[盘]',
+  lang: 'ds'
 })
 */
 

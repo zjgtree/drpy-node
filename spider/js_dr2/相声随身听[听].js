@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '相声随身听[听]'
+  title: '相声随身听[听]',
+  lang: 'dr2'
 })
 */
 

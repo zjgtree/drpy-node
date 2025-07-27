@@ -3,7 +3,8 @@
   searchable: 2,
   filterable: 1,
   quickSearch: 0,
-  title: '虎牙直播[官]'
+  title: '虎牙直播[官]',
+  lang: 'dr2'
 })
 */
 

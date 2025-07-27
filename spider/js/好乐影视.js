@@ -3,7 +3,8 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 0,
-  title: '好乐影视'
+  title: '好乐影视',
+  lang: 'ds'
 })
 */
 
