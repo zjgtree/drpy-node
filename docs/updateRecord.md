@@ -7,6 +7,7 @@
 1. 文件头增加 lang 属性，方便区分加密情况下这个源是哪张类型，`ds` `dr2` `hipy`
 2. 修复日志输出到文件在轮转时乱创文件夹问题
 3. drpyS 增加 `buildQueryString` 函数
+4. 增加drpy2的api，相关文件路径在 `public/drpy2`
 
 ### 20250727
 
