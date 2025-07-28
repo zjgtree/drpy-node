@@ -1,38 +1,21 @@
-import cheerio from './cheerio.min.js';
-import 模板 from './模板.js'
-import {gbkTool} from './gbk.min.js'
-import './crypto-js.min.js';
-import './jsencrypt.min.js';
-import './node-rsa.js';
-import './pako.min.js';
-// import JSEncrypt from './jsencrypt.js'; // 会导致壳子崩溃的
-import './json5.min.js'
-// 下面是尝试对jinja2库进行更换
-import './jinja.min.js'
-// 新增wasm支持
-import './polywasm.min.js'
-// TextEncoder,TextDecoder对象 引入不进来，下面两行代码都不行
-// import './encoding.min.js'
-// import './xxhash-wasm.min.js'
-
-
-const _jinja2 = cheerio.jinja2;
-cheerio.jinja2 = function (template, obj) {
-    try {
-        return jinja.render(template, obj);
-    } catch (e) {
-        console.log('新的jinja2库渲染失败,换回原始cheerio:' + e.message);
-        return _jinja2(template, obj)
-    }
-};
-// import cheerio from "https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/cheerio.min.js";
-// import "https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/crypto-js.js";
-// import 模板 from"https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/js/模板.js";
-// import {gbkTool} from 'https://ghproxy.net/https://raw.githubusercontent.com/hjdhnx/dr_py/main/libs/gbk.js'
+import {cheerio, 模板} from '../dist/drpy-core.min.js';
 
 let vercode = typeof (pdfl) === 'function' ? 'drpy2.1' : 'drpy2';
-const VERSION = vercode + ' 3.9.52beta1 20250728';
+const VERSION = vercode + ' 3.9.52beta2 20250729';
 const UpdateInfo = [
+    {
+        date: '20250729',
+        title: 'drpy更新，所有依赖打包成一个js文件',
+        version: '3.9.52beta2 20250729',
+        msg: `
+ 1. wasm支持
+ 2. 引入 TextEncoder、TextDecoder对象
+ 3. 引入 WXXH 加解密库
+ 4. 所有依赖打包成一个js
+ 5. 增加 buildQueryString
+ 
+       `
+    },
     {
         date: '20250728',
         title: 'drpy更新，增加tab_order线路模糊排序，优化解密算法支持文件头',
@@ -81,10 +64,35 @@ function init_test() {
     // print(模板);
     // print(typeof(模板.getMubans));
     console.log("当前版本号:" + VERSION);
-    console.log("typeof TextEncoder:" + typeof TextEncoder);
-    console.log("typeof TextDecoder:" + typeof TextDecoder);
-    console.log("typeof WebAssembly:" + typeof WebAssembly);
-    console.log("typeof WXXH:" + typeof WXXH);
+    /*
+    console.log('typeof 模板:', typeof (模板))
+    console.log('typeof cheerio:', typeof (cheerio))
+    // console.log(模板)
+    console.log('typeof gbkTool:', typeof gbkTool);
+    console.log('typeof CryptoJS:', typeof CryptoJS);
+    console.log('typeof JSEncrypt:', typeof JSEncrypt);
+    console.log('typeof NODERSA:', typeof NODERSA);
+    console.log('typeof pako:', typeof pako);
+    console.log('typeof JSON5:', typeof JSON5);
+    console.log('typeof JSONPath:', typeof JSONPath);
+    console.log('typeof jinja:', typeof jinja);
+    console.log('typeof WebAssembly:', typeof WebAssembly);
+    console.log('typeof TextEncoder:', typeof TextEncoder);
+    console.log('typeof TextDecoder:', typeof TextDecoder);
+    console.log('typeof WXXH:', typeof WXXH);
+
+    console.log(gbkTool.encode('你好'));
+    console.log(gbkTool.decode('%C4%E3%BA%C3'));
+
+    const s = '{"method":"GET","timestamp":1745206708456,"path":"/index/fuck","parameters":{"timestamp":["1745206708456"]},"body":""}';
+    const seed = 1745206708;
+    const hash = WXXH.h64(s, seed).toString(16);
+    console.log(`WASM:${hash}`);
+
+    console.log(cheerio.jinja2('渲染一个变量{{hash}}', {hash}));
+    console.log('jsonpath取值测试:', cheerio.jp('$.name', {name: '道长', project: 'drpys'}));
+    */
+
     console.log('本地代理地址:' + getProxyUrl());
     console.log(RKEY);
     // ocr_demo_test();
@@ -896,8 +904,7 @@ function ungzip(b64Data) {
 function encodeStr(input, encoding) {
     encoding = encoding || 'gbk';
     if (encoding.startsWith('gb')) {
-        const strTool = gbkTool();
-        input = strTool.encode(input);
+        input = gbkTool.encode(input);
     }
     return input
 }
@@ -911,8 +918,7 @@ function encodeStr(input, encoding) {
 function decodeStr(input, encoding) {
     encoding = encoding || 'gbk';
     if (encoding.startsWith('gb')) {
-        const strTool = gbkTool();
-        input = strTool.decode(input);
+        input = gbkTool.decode(input);
     }
     return input
 }
@@ -1714,6 +1720,27 @@ function keysToLowerCase(obj) {
         result[newKey] = obj[key]; // 如果值也是对象，可以递归调用本函数
         return result;
     }, {});
+}
+
+//对象To字符串query
+function buildQueryString(params) {
+    const queryArray = [];
+    for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+            // 处理参数值：兼容null、undefined，转为字符串并编码
+            let value = params[key];
+            if (value === undefined || value === null) {
+                value = "";
+            } else {
+                value = value.toString();
+            }
+            // 编码键值（兼容ES5）
+            const encodedKey = encodeURIComponent(key);
+            const encodedValue = encodeURIComponent(value);
+            queryArray.push(encodedKey + "=" + encodedValue);
+        }
+    }
+    return queryArray.join("&");
 }
 
 //字符串To对象

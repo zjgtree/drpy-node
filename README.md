@@ -1,7 +1,7 @@
 # drpyS(drpy-node)
 
 nodejs作为服务端的drpy实现。全面升级异步写法  
-~~积极开发中，每日一更~~，当前进度 `60%`  
+~~积极开发中，每日一更~~，当前进度 `62%`  
 ~~找工作中，随缘更新~~  
 上班当牛马，下班要带娃，阶段性佛系趁娃睡觉熬夜更新
 
@@ -16,9 +16,14 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [本站防止爬虫协议](/robots.txt)
 * [本项目主页-免翻](https://git-proxy.playdreamer.cn/hjdhnx/drpy-node)
 * [DS源适配猫影视](https://github.com/hjdhnx/CatPawOpen/tree/ds-cat)
+* [drpy2打包项目](https://github.com/hjdhnx/drpy-webpack)
 * [在线猫ds源主页](/cat/index.html)
 
 ## 更新记录
+
+### 20250729
+
+更新至V1.2.3
 
 ### 20250728
 

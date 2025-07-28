@@ -199,7 +199,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 func: async ({file, dr2Dir, requestHost, pwd, drpy, SitesMap}) => {
                     const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                     // dr2ApiType=0 使用接口drpy2 dr2ApiType=1 使用壳子内置的drpy2
-                    let api = dr2ApiType ? `assets://js/lib/drpy2.js` : `${requestHost}/public/drpy2/drpy2.min.js`;
+                    let api = dr2ApiType ? `assets://js/lib/drpy2.js` : `${requestHost}/public/drpy/drpy2.min.js`;
                     let ext = `${requestHost}/js/${file}`;
                     if (pwd) {
                         ext += `?pwd=${pwd}`;

@@ -1,5 +1,14 @@
 # drpyS更新记录
 
+### 20250729
+
+更新至V1.2.3
+
+1. drpy2接口增加 `buildQueryString` `TextEncoder` `TextDecoder` `WXXH` `WebAssembly`
+2. drpy2 依赖库打包成一个 `drpy-core.js`
+
+具体打包过程参考：[drpy2打包项目](https://github.com/hjdhnx/drpy-webpack)
+
 ### 20250728
 
 更新至V1.2.2
