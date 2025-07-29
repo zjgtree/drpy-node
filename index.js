@@ -161,7 +161,7 @@ const start = async () => {
 // 停止服务
 const stop = async () => {
     try {
-        await fastify.close(); // 关闭服务器
+        await fastify.server.close(); // 关闭服务器
         console.log('Server stopped gracefully');
     } catch (err) {
         fastify.log.error('Error while stopping the server:', err);
