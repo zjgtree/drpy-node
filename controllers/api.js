@@ -90,7 +90,7 @@ export default (fastify, options, done) => {
 
             const moduleExt = query.extend || '';
             // console.log('moduleExt:', typeof moduleExt, moduleExt);
-            const protocol = request.protocol;
+            const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
             const hostname = request.hostname;
             // const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/api/', '/proxy/') + '/?do=js';
             // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
@@ -263,7 +263,7 @@ export default (fastify, options, done) => {
         const rangeHeader = request.headers.range; // 获取客户端的 Range 请求头
 
         const moduleExt = query.extend || '';
-        const protocol = request.protocol;
+        const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
         const hostname = request.hostname;
 
         const publicUrl = `${protocol}://${hostname}/public/`;
@@ -368,7 +368,7 @@ export default (fastify, options, done) => {
             return reply.status(404).send({error: `解析 ${jxName} not found`});
         }
         const moduleExt = query.extend || '';
-        const protocol = request.protocol;
+        const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
         const hostname = request.hostname;
 
         const publicUrl = `${protocol}://${hostname}/public/`;
