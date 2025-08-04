@@ -1,46 +1,22 @@
-import path, { parse } from 'path';
-import {existsSync, watch} from 'fs';
+import path from 'path';
+import {existsSync} from 'fs';
 import {base64Decode} from '../libs_drpy/crypto-util.js';
+import {ENV} from "../utils/env.js";
+import {validatePwd} from "../utils/api_validate.js";
+import {startJsonWatcher, getApiEngine} from "../utils/api_helper.js";
 import * as drpy from '../libs/drpyS.js';
 import * as drpy2 from '../libs/dr2Adapter.js';
 import * as pyadapter from '../libs/pyAdapter.js';
-import {ENV} from "../utils/env.js";
-import {validatePwd} from "../utils/api_validate.js";
 
-//添加JSON文件监听  
-let jsonWatcher = null;
-let debounceTimers = new Map(); // 防抖计时器
-function startJsonWatcher(jsonDir) {
-    if (process.env.NODE_ENV !== 'development') return;
-
-    try {
-        jsonWatcher = watch(jsonDir, {recursive: true}, (eventType, filename) => {
-            if (filename && filename.endsWith('.json')) {
-                // 清除之前的计时器  
-                if (debounceTimers.has(filename)) {
-                    clearTimeout(debounceTimers.get(filename));
-                }
-
-                // 设置新的防抖计时器  
-                const timer = setTimeout(() => {
-                    console.log(`${filename}文件已${eventType}，即将清除所有模块缓存`);
-                    drpy.clearAllCache();
-                    debounceTimers.delete(filename);
-                }, 100); // 100ms防抖延迟  
-
-                debounceTimers.set(filename, timer);
-            }
-        });
-
-        console.log(`start json file hot reload success，listening path: ${jsonDir}`);
-    } catch (error) {
-        console.error('start json file listening failed with error:', error);
-    }
-}
+const ENGINES = {
+    drpy,
+    drpy2,
+    pyadapter,
+};
 
 export default (fastify, options, done) => {
     // 启动JSON监听  
-    startJsonWatcher(options.jsonDir);
+    startJsonWatcher(drpy, options.jsonDir);
 
     // 动态加载模块并根据 query 执行不同逻辑
     fastify.route({
@@ -55,35 +31,8 @@ export default (fastify, options, done) => {
             const method = request.method.toUpperCase();
             // 根据请求方法选择参数来源
             const query = method === 'GET' ? request.query : request.body;
-            let parseEngine;
-            let _ext;
-            let moduleDir;
-            // 根据查询参数选择解析引擎和脚本路径(adpt=ds || dr || py)
-            const adpt = query.adpt;
-            switch (adpt) {
-                case 'ds':
-                    parseEngine = drpy;
-                    moduleDir = options.jsDir;
-                    _ext ='.js';
-                    break;
-                case 'dr':
-                    parseEngine = drpy2;
-                    moduleDir = options.dr2Dir;
-                    _ext ='.js';
-                    break;
-                case 'py':
-                    parseEngine = pyadapter;
-                    moduleDir = options.pyDir;
-                    _ext ='.py';
-                    break;
-                default:
-                    parseEngine = drpy;
-                    moduleDir = options.jsDir;
-                    _ext ='.js';
-                    break; 
-            }
-            const modulePath = path.join(moduleDir, `${moduleName}${_ext}`); 
-             if (!existsSync(modulePath)) {
+            let {apiEngine, moduleDir, _ext, modulePath} = getApiEngine(ENGINES, moduleName, query, options);
+            if (!existsSync(modulePath)) {
                 reply.status(404).send({error: `Module ${moduleName} not found`});
                 return;
             }
@@ -129,7 +78,7 @@ export default (fastify, options, done) => {
                     return null;
                 }
                 const _env = getEnv(_moduleName);
-                const RULE = await parseEngine.getRule(_modulePath, _env);
+                const RULE = await apiEngine.getRule(_modulePath, _env);
                 RULE.callRuleFn = async function (_method, _args) {
                     let invokeMethod = null;
                     switch (_method) {
@@ -165,7 +114,7 @@ export default (fastify, options, done) => {
                             return await RULE[_method]
                         }
                     }
-                    return await parseEngine[invokeMethod](_modulePath, _env, ..._args)
+                    return await apiEngine[invokeMethod](_modulePath, _env, ..._args)
                 };
                 return RULE
             };
@@ -175,7 +124,7 @@ export default (fastify, options, done) => {
                 if ('play' in query) {
                     // 处理播放逻辑
                     // console.log('play query:', query);
-                    const result = await parseEngine.play(modulePath, env, query.flag, query.play);
+                    const result = await apiEngine.play(modulePath, env, query.flag, query.play);
                     return reply.send(result);
                 }
 
@@ -191,7 +140,7 @@ export default (fastify, options, done) => {
                         }
                     }
                     // 分类逻辑
-                    const result = await parseEngine.cate(modulePath, env, query.t, pg, 1, extend);
+                    const result = await apiEngine.cate(modulePath, env, query.t, pg, 1, extend);
                     return reply.send(result);
                 }
 
@@ -200,13 +149,13 @@ export default (fastify, options, done) => {
                         fastify.log.info(`[${moduleName}] 二级已接收post数据: ${query.ids}`);
                     }
                     // 详情逻辑
-                    const result = await parseEngine.detail(modulePath, env, query.ids.split(','));
+                    const result = await apiEngine.detail(modulePath, env, query.ids.split(','));
                     return reply.send(result);
                 }
 
                 if ('ac' in query && 'action' in query) {
                     // 处理动作逻辑
-                    const result = await parseEngine.action(modulePath, env, query.action, query.value);
+                    const result = await apiEngine.action(modulePath, env, query.action, query.value);
                     return reply.send(result);
                 }
 
@@ -214,13 +163,13 @@ export default (fastify, options, done) => {
                 if ('wd' in query) {
                     // 搜索逻辑
                     const quick = 'quick' in query ? query.quick : 0;
-                    const result = await parseEngine.search(modulePath, env, query.wd, quick, pg);
+                    const result = await apiEngine.search(modulePath, env, query.wd, quick, pg);
                     return reply.send(result);
                 }
 
                 if ('refresh' in query) {
                     // 强制刷新初始化逻辑
-                    const refreshedObject = await parseEngine.init(modulePath, env, true);
+                    const refreshedObject = await apiEngine.init(modulePath, env, true);
                     return reply.send(refreshedObject);
                 }
                 if (!('filter' in query)) {
@@ -228,8 +177,8 @@ export default (fastify, options, done) => {
                 }
                 // 默认逻辑，返回 home + homeVod 接口
                 const filter = 'filter' in query ? query.filter : 1;
-                const resultHome = await parseEngine.home(modulePath, env, filter);
-                const resultHomeVod = await parseEngine.homeVod(modulePath, env);
+                const resultHome = await apiEngine.home(modulePath, env, filter);
+                const resultHomeVod = await apiEngine.homeVod(modulePath, env);
                 let result = {
                     ...resultHome,
                     // list: resultHomeVod,
@@ -253,7 +202,8 @@ export default (fastify, options, done) => {
     fastify.get('/proxy/:module/*', async (request, reply) => {
         const moduleName = request.params.module;
         const query = request.query; // 获取 query 参数
-        const modulePath = path.join(options.jsDir, `${moduleName}.js`);
+
+        let {apiEngine, modulePath} = getApiEngine(ENGINES, moduleName, query, options);
         if (!existsSync(modulePath)) {
             reply.status(404).send({error: `Module ${moduleName} not found`});
             return;
@@ -295,7 +245,7 @@ export default (fastify, options, done) => {
 
         const env = getEnv(moduleName);
         try {
-            const backRespList = await parseEngine.proxy(modulePath, env, query);
+            const backRespList = await apiEngine.proxy(modulePath, env, query);
             const statusCode = backRespList[0];
             const mediaType = backRespList[1] || 'application/octet-stream';
             let content = backRespList[2] || '';

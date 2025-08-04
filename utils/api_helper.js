@@ -1,0 +1,64 @@
+import {watch} from 'fs';
+import path from 'path';
+
+//添加JSON文件监听
+let jsonWatcher = null;
+let debounceTimers = new Map(); // 防抖计时器
+export function startJsonWatcher(drpy, jsonDir) {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    try {
+        jsonWatcher = watch(jsonDir, {recursive: true}, (eventType, filename) => {
+            if (filename && filename.endsWith('.json')) {
+                // 清除之前的计时器
+                if (debounceTimers.has(filename)) {
+                    clearTimeout(debounceTimers.get(filename));
+                }
+
+                // 设置新的防抖计时器
+                const timer = setTimeout(() => {
+                    console.log(`${filename}文件已${eventType}，即将清除所有模块缓存`);
+                    drpy.clearAllCache();
+                    debounceTimers.delete(filename);
+                }, 100); // 100ms防抖延迟
+
+                debounceTimers.set(filename, timer);
+            }
+        });
+
+        console.log(`start json file hot reload success，listening path: ${jsonDir}`);
+    } catch (error) {
+        console.error('start json file listening failed with error:', error);
+    }
+}
+
+export function getApiEngine(engines, moduleName, query, options) {
+    const adapt = query.adapt;
+    let apiEngine;
+    let moduleDir;
+    let _ext;
+
+    switch (adapt) {
+        case 'dr':
+            apiEngine = engines.drpy2;
+            moduleDir = options.dr2Dir;
+            _ext = '.js';
+            break;
+        case 'py':
+            apiEngine = engines.pyadapter;
+            moduleDir = options.pyDir;
+            _ext = '.py';
+            break;
+        default:
+            apiEngine = engines.drpy;
+            moduleDir = options.jsDir;
+            _ext = '.js';
+    }
+    const modulePath = path.join(moduleDir, `${moduleName}${_ext}`);
+    return {
+        apiEngine,
+        moduleDir,
+        _ext,
+        modulePath,
+    }
+}

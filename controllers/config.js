@@ -189,7 +189,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
     // 根据用户是否启用dr2源去生成对应配置
     const enable_dr2 = ENV.get('enable_dr2', '1');
-    if ((enable_dr2 === '1' || enable_dr2 === '2') ) {
+    if ((enable_dr2 === '1' || enable_dr2 === '2')) {
         const dr2_files = readdirSync(dr2Dir);
         let dr2_valid_files = dr2_files.filter((file) => file.endsWith('.js') && !file.startsWith('_')); // 筛选出不是 "_" 开头的 .js 文件
         // log(dr2_valid_files);
@@ -253,43 +253,43 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
                     fileSites.forEach((fileSite) => {
                         if (enable_dr2 === '1') {
-                        // dr2ApiType=0 使用接口drpy2 dr2ApiType=1 使用壳子内置的drpy2
-                        let api = dr2ApiType ? `assets://js/lib/drpy2.js` : `${requestHost}/public/drpy/drpy2.min.js`;
-                        let ext = `${requestHost}/js/${file}`;
-                        if (pwd) {
-                           ext += `?pwd=${pwd}`;
-                        }
-                        // 处理传参源的ext
-                        if (fileSite.queryStr) {
-                            ext = updateQueryString(ext, fileSite.queryStr);
-                        }
-                        // 模式1：只启用dr2的T3配置
-                        const site = {
-                            key: fileSite.key,
-                            name: fileSite.name,
-                            type: 3, // 固定值
-                            api,
-                            ...ruleMeta,
-                            ext: ext || "", // 固定为空字符串
-                        };
-                        sites.push(site);
+                            // dr2ApiType=0 使用接口drpy2 dr2ApiType=1 使用壳子内置的drpy2
+                            let api = dr2ApiType ? `assets://js/lib/drpy2.js` : `${requestHost}/public/drpy/drpy2.min.js`;
+                            let ext = `${requestHost}/js/${file}`;
+                            if (pwd) {
+                                ext += `?pwd=${pwd}`;
+                            }
+                            // 处理传参源的ext
+                            if (fileSite.queryStr) {
+                                ext = updateQueryString(ext, fileSite.queryStr);
+                            }
+                            // 模式1：只启用dr2的T3配置
+                            const site = {
+                                key: fileSite.key,
+                                name: fileSite.name,
+                                type: 3, // 固定值
+                                api,
+                                ...ruleMeta,
+                                ext: ext || "", // 固定为空字符串
+                            };
+                            sites.push(site);
                         } else if (enable_dr2 === '2') {
                             // 模式2：只启用T3脚本的T4风格API配置
                             const t4site = {
                                 key: fileSite.key,
                                 name: fileSite.name,
                                 type: 4, // 固定值
-                                api:`${requestHost}/api/${baseName}`,
+                                api: `${requestHost}/api/${baseName}`,
                                 ...ruleMeta,
                                 ext: "", // 固定为空字符串
                             };
                             // 添加isdr2参数到API URL
                             if (pwd) {
-                                t4site.api += `?pwd=${pwd}&adpt=dr`;
+                                t4site.api += `?pwd=${pwd}&adapt=dr`;
                             } else {
-                                t4site.api += `?adpt=dr`;
+                                t4site.api += `?adapt=dr`;
                             }
-                            
+
                             // 处理传参源的API参数
                             if (fileSite.queryStr) {
                                 const separator = t4site.api.includes('?') ? '&' : '?';
