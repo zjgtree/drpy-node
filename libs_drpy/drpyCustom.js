@@ -745,3 +745,4 @@ globalThis.objectToQueryString = function (obj) {
     }
     return encoded.join('&');
 }
+globalThis.parseTags = parseTags;

@@ -1,7 +1,9 @@
-import path from 'path';
+import path, { parse } from 'path';
 import {existsSync, watch} from 'fs';
 import {base64Decode} from '../libs_drpy/crypto-util.js';
 import * as drpy from '../libs/drpyS.js';
+import * as drpy2 from '../libs/dr2Adapter.js';
+import * as pyadapter from '../libs/pyAdapter.js';
 import {ENV} from "../utils/env.js";
 import {validatePwd} from "../utils/api_validate.js";
 
@@ -50,14 +52,42 @@ export default (fastify, options, done) => {
         },
         handler: async (request, reply) => {
             const moduleName = request.params.module;
-            const modulePath = path.join(options.jsDir, `${moduleName}.js`);
-            if (!existsSync(modulePath)) {
-                reply.status(404).send({error: `Module ${moduleName} not found`});
-                return;
-            }
             const method = request.method.toUpperCase();
             // 根据请求方法选择参数来源
             const query = method === 'GET' ? request.query : request.body;
+            let parseEngine;
+            let _ext;
+            let moduleDir;
+            // 根据查询参数选择解析引擎和脚本路径(adpt=ds || dr || py)
+            const adpt = query.adpt;
+            switch (adpt) {
+                case 'ds':
+                    parseEngine = drpy;
+                    moduleDir = options.jsDir;
+                    _ext ='.js';
+                    break;
+                case 'dr':
+                    parseEngine = drpy2;
+                    moduleDir = options.dr2Dir;
+                    _ext ='.js';
+                    break;
+                case 'py':
+                    parseEngine = pyadapter;
+                    moduleDir = options.pyDir;
+                    _ext ='.py';
+                    break;
+                default:
+                    parseEngine = drpy;
+                    moduleDir = options.jsDir;
+                    _ext ='.js';
+                    break; 
+            }
+            const modulePath = path.join(moduleDir, `${moduleName}${_ext}`); 
+             if (!existsSync(modulePath)) {
+                reply.status(404).send({error: `Module ${moduleName} not found`});
+                return;
+            }
+
             const moduleExt = query.extend || '';
             // console.log('moduleExt:', typeof moduleExt, moduleExt);
             const protocol = request.protocol;
@@ -65,7 +95,6 @@ export default (fastify, options, done) => {
             // const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/api/', '/proxy/') + '/?do=js';
             // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
             // console.log('proxyUrl:', proxyUrl);
-
             const publicUrl = `${protocol}://${hostname}/public/`;
             const jsonUrl = `${protocol}://${hostname}/json/`;
             const httpUrl = `${protocol}://${hostname}/http`;
@@ -95,12 +124,12 @@ export default (fastify, options, done) => {
 
             const env = getEnv(moduleName);
             env.getRule = async function (_moduleName) {
-                const _modulePath = path.join(options.jsDir, `${_moduleName}.js`);
+                const _modulePath = path.join(moduleDir, `${_moduleName}${_ext}`);
                 if (!existsSync(_modulePath)) {
                     return null;
                 }
                 const _env = getEnv(_moduleName);
-                const RULE = await drpy.getRule(_modulePath, _env);
+                const RULE = await parseEngine.getRule(_modulePath, _env);
                 RULE.callRuleFn = async function (_method, _args) {
                     let invokeMethod = null;
                     switch (_method) {
@@ -136,7 +165,7 @@ export default (fastify, options, done) => {
                             return await RULE[_method]
                         }
                     }
-                    return await drpy[invokeMethod](_modulePath, _env, ..._args)
+                    return await parseEngine[invokeMethod](_modulePath, _env, ..._args)
                 };
                 return RULE
             };
@@ -146,7 +175,7 @@ export default (fastify, options, done) => {
                 if ('play' in query) {
                     // 处理播放逻辑
                     // console.log('play query:', query);
-                    const result = await drpy.play(modulePath, env, query.flag, query.play);
+                    const result = await parseEngine.play(modulePath, env, query.flag, query.play);
                     return reply.send(result);
                 }
 
@@ -162,7 +191,7 @@ export default (fastify, options, done) => {
                         }
                     }
                     // 分类逻辑
-                    const result = await drpy.cate(modulePath, env, query.t, pg, 1, extend);
+                    const result = await parseEngine.cate(modulePath, env, query.t, pg, 1, extend);
                     return reply.send(result);
                 }
 
@@ -171,13 +200,13 @@ export default (fastify, options, done) => {
                         fastify.log.info(`[${moduleName}] 二级已接收post数据: ${query.ids}`);
                     }
                     // 详情逻辑
-                    const result = await drpy.detail(modulePath, env, query.ids.split(','));
+                    const result = await parseEngine.detail(modulePath, env, query.ids.split(','));
                     return reply.send(result);
                 }
 
                 if ('ac' in query && 'action' in query) {
                     // 处理动作逻辑
-                    const result = await drpy.action(modulePath, env, query.action, query.value);
+                    const result = await parseEngine.action(modulePath, env, query.action, query.value);
                     return reply.send(result);
                 }
 
@@ -185,13 +214,13 @@ export default (fastify, options, done) => {
                 if ('wd' in query) {
                     // 搜索逻辑
                     const quick = 'quick' in query ? query.quick : 0;
-                    const result = await drpy.search(modulePath, env, query.wd, quick, pg);
+                    const result = await parseEngine.search(modulePath, env, query.wd, quick, pg);
                     return reply.send(result);
                 }
 
                 if ('refresh' in query) {
                     // 强制刷新初始化逻辑
-                    const refreshedObject = await drpy.init(modulePath, env, true);
+                    const refreshedObject = await parseEngine.init(modulePath, env, true);
                     return reply.send(refreshedObject);
                 }
                 if (!('filter' in query)) {
@@ -199,8 +228,8 @@ export default (fastify, options, done) => {
                 }
                 // 默认逻辑，返回 home + homeVod 接口
                 const filter = 'filter' in query ? query.filter : 1;
-                const resultHome = await drpy.home(modulePath, env, filter);
-                const resultHomeVod = await drpy.homeVod(modulePath, env);
+                const resultHome = await parseEngine.home(modulePath, env, filter);
+                const resultHomeVod = await parseEngine.homeVod(modulePath, env);
                 let result = {
                     ...resultHome,
                     // list: resultHomeVod,
@@ -266,7 +295,7 @@ export default (fastify, options, done) => {
 
         const env = getEnv(moduleName);
         try {
-            const backRespList = await drpy.proxy(modulePath, env, query);
+            const backRespList = await parseEngine.proxy(modulePath, env, query);
             const statusCode = backRespList[0];
             const mediaType = backRespList[1] || 'application/octet-stream';
             let content = backRespList[2] || '';
