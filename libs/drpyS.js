@@ -48,7 +48,7 @@ const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/js');
 
-
+globalThis.JSONbig = JSONbig; // 抖音弹幕直播必须
 globalThis._ENV = process.env;
 globalThis._fetch = fetch;
 globalThis.JsonBig = JSONbig({storeAsString: true});
