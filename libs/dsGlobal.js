@@ -1,4 +1,5 @@
 // import '../libs_drpy/jsonpathplus.min.js'; //htmlParser里引入过了
+// globalThis.JSONbig = JSONbig; // 必须在drpyS.js里引入
 globalThis.reqs = reqs;
 globalThis.forge = forge
 globalThis.misc = misc;
@@ -17,4 +18,3 @@ globalThis.minizlib = minizlib
 globalThis.XMLHttpRequest = XMLHttpRequest;
 globalThis.WebSocket = WebSocket;
 globalThis.WebSocketServer = WebSocketServer;
-globalThis.JSONbig = JSONbig;
