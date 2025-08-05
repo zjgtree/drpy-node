@@ -49,6 +49,16 @@ export function getApiEngine(engines, moduleName, query, options) {
             moduleDir = options.pyDir;
             _ext = '.py';
             break;
+        case 'cat':
+            apiEngine = engines.catvod;
+            moduleDir = options.catDir;
+            _ext = '.js';
+            break;
+        case 'xbpq':
+            apiEngine = engines.xbpq;
+            moduleDir = options.xbpqDir;
+            _ext = '.json';
+            break;
         default:
             apiEngine = engines.drpyS;
             moduleDir = options.jsDir;

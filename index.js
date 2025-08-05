@@ -19,6 +19,8 @@ const jsonDir = path.join(__dirname, 'json');
 const jsDir = path.join(__dirname, 'spider/js');
 const dr2Dir = path.join(__dirname, 'spider/js_dr2');
 const pyDir = path.join(__dirname, 'spider/py');
+const catDir = path.join(__dirname, 'spider/catvod');
+const xbpqDir = path.join(__dirname, 'spider/xbpq');
 
 // 静态资源
 fastify.register(fastifyStatic, {
@@ -100,6 +102,8 @@ registerRoutes(fastify, {
     jsDir: jsDir,
     dr2Dir: dr2Dir,
     pyDir: pyDir,
+    catDir: catDir,
+    xbpqDir: xbpqDir,
     viewsDir: path.join(__dirname, 'views'),
     configDir: path.join(__dirname, 'config'),
     PORT,

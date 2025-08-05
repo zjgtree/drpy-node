@@ -8,12 +8,14 @@ import * as drpyS from '../libs/drpyS.js';
 import * as drpy2 from '../libs/drpy2.js';
 import * as hipy from '../libs/hipy.js';
 import * as xbpq from '../libs/xbpq.js';
+import * as catvod from '../libs/catvod.js';
 
 const ENGINES = {
     drpyS,
     drpy2,
     hipy,
     xbpq,
+    catvod,
 };
 
 export default (fastify, options, done) => {

@@ -1,4 +1,3 @@
-//在线解析py源，能力有限，暂时不会
 const getRule = async function () {
 
 }
