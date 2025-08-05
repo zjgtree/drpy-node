@@ -354,7 +354,7 @@ export default (fastify, options, done) => {
 
         const env = getEnv('');
         try {
-            const backResp = await drpy.jx(jxPath, env, query);
+            const backResp = await drpyS.jx(jxPath, env, query);
             const statusCode = 200;
             const mediaType = 'application/json; charset=utf-8';
             if (typeof backResp === 'object') {
