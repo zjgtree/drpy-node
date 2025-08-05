@@ -2,18 +2,19 @@ import {readFile} from 'fs/promises';
 import {existsSync, readFileSync, writeFileSync, mkdirSync} from 'fs';
 import {fileURLToPath} from "url";
 import {XMLHttpRequest} from 'xmlhttprequest';
+import WebSocket, {WebSocketServer} from 'ws';
 import path from "path";
 import vm from 'vm';
-import WebSocket, {WebSocketServer} from 'ws';
 import zlib from 'zlib';
 import JSONbig from 'json-bigint';
-import * as minizlib from 'minizlib';
 import forge from "node-forge";
-import '../libs_drpy/es6-extend.js'
-import {getSitesMap} from "../utils/sites-map.js";
+import * as minizlib from 'minizlib';
 import * as utils from '../utils/utils.js';
 import * as misc from '../utils/misc.js';
 import COOKIE from '../utils/cookieManager.js';
+import AIS from '../utils/ais.js';
+import fileHeaderManager from "../utils/fileHeaderManager.js";
+import {getSitesMap} from "../utils/sites-map.js";
 import {ENV} from '../utils/env.js';
 import {Quark} from "../utils/quark.js";
 import {UC} from "../utils/uc.js";
@@ -21,62 +22,39 @@ import {Ali} from "../utils/ali.js";
 import {Cloud} from "../utils/cloud.js";
 import {Yun} from "../utils/yun.js";
 import {Pan} from "../utils/pan123.js";
-import AIS from '../utils/ais.js';
-import fileHeaderManager from "../utils/fileHeaderManager.js";
 import {getContentType, getMimeType} from "../utils/mime-type.js";
 import {getParsesDict} from "../utils/file.js";
 import {getFirstLetter} from "../utils/pinyin-tool.js";
 import {reqs} from "../utils/req.js";
 import "../utils/random-http-ua.js";
-
-// const { req } = await import('../utils/req.js');
-import {gbkTool} from '../libs_drpy/gbk.js'
-// import {atob, btoa, base64Encode, base64Decode, md5} from "../libs_drpy/crypto-util.js";
+import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
 import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
 import template from '../libs_drpy/template.js'
 import batchExecute from '../libs_drpy/batchExecute.js';
 import '../libs_drpy/abba.js'
-import '../libs_drpy/drpyInject.js'
-import '../libs_drpy/crypto-js.js';
 import '../libs_drpy/jsencrypt.js';
+import '../libs_drpy/gb18030.js';
+import '../libs_drpy/crypto-js.js';
 import '../libs_drpy/node-rsa.js';
 import '../libs_drpy/pako.min.js';
 import '../libs_drpy/json5.js'
 import '../libs_drpy/jinja.js'
-// import '../libs_drpy/jsonpathplus.min.js'
+import '../libs_drpy/drpyInject.js'
 import '../libs_drpy/drpyCustom.js'
-import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
-// import '../libs_drpy/crypto-js-wasm.js'
+import '../libs_drpy/es6-extend.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/js');
 
-globalThis.reqs = reqs;
-globalThis.forge = forge
-globalThis.misc = misc;
-globalThis.utils = utils;
-globalThis.COOKIE = COOKIE;
-globalThis.ENV = ENV;
+
 globalThis._ENV = process.env;
-globalThis.Quark = Quark;
-globalThis.UC = UC;
-globalThis.Ali = Ali;
-globalThis.Cloud = Cloud;
-globalThis.Yun = Yun;
-globalThis.Pan = Pan;
+globalThis._fetch = fetch;
+globalThis.JsonBig = JSONbig({storeAsString: true});
 globalThis.require = rootRequire;
 initializeGlobalDollar();
-globalThis._fetch = fetch;
-globalThis.XMLHttpRequest = XMLHttpRequest;
-globalThis.WebSocket = WebSocket;
-globalThis.WebSocketServer = WebSocketServer;
-globalThis.zlib = zlib;
-globalThis.JSONbig = JSONbig;
-globalThis.JsonBig = JSONbig({storeAsString: true});
-globalThis.minizlib = minizlib;
-globalThis.AIS = AIS;
+
 globalThis.pathLib = {
     basename: path.basename,
     extname: path.extname,
@@ -250,6 +228,7 @@ export async function getSandbox(env = {}) {
         aesX,
         desX,
         req,
+        reqs,
         _fetch,
         XMLHttpRequest,
         simplecc,

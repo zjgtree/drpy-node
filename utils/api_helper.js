@@ -4,7 +4,7 @@ import path from 'path';
 //添加JSON文件监听
 let jsonWatcher = null;
 let debounceTimers = new Map(); // 防抖计时器
-export function startJsonWatcher(drpy, jsonDir) {
+export function startJsonWatcher(ENGINES, jsonDir) {
     if (process.env.NODE_ENV !== 'development') return;
 
     try {
@@ -18,7 +18,7 @@ export function startJsonWatcher(drpy, jsonDir) {
                 // 设置新的防抖计时器
                 const timer = setTimeout(() => {
                     console.log(`${filename}文件已${eventType}，即将清除所有模块缓存`);
-                    drpy.clearAllCache();
+                    ENGINES.drpyS.clearAllCache();
                     debounceTimers.delete(filename);
                 }, 100); // 100ms防抖延迟
 
@@ -45,12 +45,12 @@ export function getApiEngine(engines, moduleName, query, options) {
             _ext = '.js';
             break;
         case 'py':
-            apiEngine = engines.pyadapter;
+            apiEngine = engines.hipy;
             moduleDir = options.pyDir;
             _ext = '.py';
             break;
         default:
-            apiEngine = engines.drpy;
+            apiEngine = engines.drpyS;
             moduleDir = options.jsDir;
             _ext = '.js';
     }

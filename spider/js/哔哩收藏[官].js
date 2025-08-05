@@ -24,8 +24,14 @@
  * 传参 ?render=1&type=url&params=../json/哔哩收藏.json@哔哩收藏[官]
  * 获取收藏 /x/v3/fav/resource/list?media_id=1145063440&pn=1&ps=20&keyword=
  * 用户可以通过PC端获取公开收藏夹配置，实现个人收藏夹视频播放
- */
-var rule = {
+@header({
+  searchable: 2,
+  filterable: 1,
+  quickSearch: 0,
+  title: '哔哩收藏[官]',
+  lang: 'ds'
+})
+*/var rule = {
     title: '哔哩收藏[官]',
     host: 'https://api.bilibili.com',
     homeUrl: '/x/web-interface/ranking/v2?rid=0&type=origin',

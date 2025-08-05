@@ -4,19 +4,21 @@ import {base64Decode} from '../libs_drpy/crypto-util.js';
 import {ENV} from "../utils/env.js";
 import {validatePwd} from "../utils/api_validate.js";
 import {startJsonWatcher, getApiEngine} from "../utils/api_helper.js";
-import * as drpy from '../libs/drpyS.js';
-import * as drpy2 from '../libs/dr2Adapter.js';
-import * as pyadapter from '../libs/pyAdapter.js';
+import * as drpyS from '../libs/drpyS.js';
+import * as drpy2 from '../libs/drpy2.js';
+import * as hipy from '../libs/hipy.js';
+import * as xbpq from '../libs/xbpq.js';
 
 const ENGINES = {
-    drpy,
+    drpyS,
     drpy2,
-    pyadapter,
+    hipy,
+    xbpq,
 };
 
 export default (fastify, options, done) => {
     // 启动JSON监听  
-    startJsonWatcher(drpy, options.jsonDir);
+    startJsonWatcher(ENGINES, options.jsonDir);
 
     // 动态加载模块并根据 query 执行不同逻辑
     fastify.route({

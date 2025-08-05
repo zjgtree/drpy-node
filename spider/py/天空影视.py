@@ -14,7 +14,6 @@ from Crypto.Cipher import AES, PKCS1_v1_5
 import sys,time,json,base64,urllib3,hashlib
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 sys.path.append('..')
-
 try:
     # from base.spider import Spider as BaseSpider
     from base.spider import BaseSpider
@@ -90,7 +89,7 @@ class Spider(BaseSpider):
             for j in i.get('tv_list', []):
                 videos.append({
                     'vod_id': j.get('news_id'),
-                    'vod_name': j.get('name', j.get('sub_title')),
+                    'vod_name': j.get('title', j.get('sub_title')),
                     'vod_pic': j.get('ver_pic')
                 })
         return {'class': classes, 'list': videos}
@@ -214,7 +213,7 @@ class Spider(BaseSpider):
         return {'list': videos}
 
     def playerContent(self, flag, id, vipflags):
-        jx, url, play_header = 0, '', {'User-Agent': 'okhttp/3.10.0'}
+        jx, url, play_header = 0, '', {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 15; 24129PN74C Build/AP3A.240617.008)'}
         episodes, news_id, resite = id.split('@', 2)
         timestamp = self.timestamp()
         payload = {

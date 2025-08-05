@@ -1,7 +1,7 @@
 import {readdirSync, readFileSync, writeFileSync, existsSync} from 'fs';
 import {readFile} from 'fs/promises';
 import path from 'path';
-import * as drpy from '../libs/drpyS.js';
+import * as drpyS from '../libs/drpyS.js';
 import '../libs_drpy/jinja.js'
 import {naturalSort, urljoin, updateQueryString} from '../utils/utils.js'
 import {md5} from "../libs_drpy/crypto-util.js";
@@ -13,7 +13,7 @@ import {getSitesMap} from "../utils/sites-map.js";
 import {getParsesDict} from "../utils/file.js";
 import batchExecute from '../libs_drpy/batchExecute.js';
 
-const {jsEncoder} = drpy;
+const {jsEncoder} = drpyS;
 
 // 工具函数：生成 JSON 数据
 async function generateSiteJSON(options, requestHost, sub, pwd) {
@@ -82,7 +82,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
     let link_jar = '';
     let enableRuleName = ENV.get('enable_rule_name', '0') === '1';
-    let isLoaded = await drpy.isLoaded();
+    let isLoaded = await drpyS.isLoaded();
     let forceHeader = Number(process.env.FORCE_HEADER) || 0;
     let dr2ApiType = Number(process.env.DR2_API_TYPE) || 0; // 0 ds里的api 1壳子内置
     // console.log('hide_adult:', ENV.get('hide_adult'));
@@ -94,7 +94,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     log(`开始生成ds的t4配置，jsDir:${jsDir},源数量: ${valid_files.length}`);
     const tasks = valid_files.map((file) => {
         return {
-            func: async ({file, jsDir, requestHost, pwd, drpy, SitesMap, jsEncoder}) => {
+            func: async ({file, jsDir, requestHost, pwd, drpyS, SitesMap, jsEncoder}) => {
                 const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                 let api = `${requestHost}/api/${baseName}`;  // 使用请求的 host 地址，避免硬编码端口
                 if (pwd) {
@@ -112,7 +112,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 // console.log('ds header:', header);
                 if (!header || forceHeader) {
                     try {
-                        ruleObject = await drpy.getRuleObject(filePath);
+                        ruleObject = await drpyS.getRuleObject(filePath);
                     } catch (e) {
                         throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                     }
@@ -169,7 +169,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     sites.push(site);
                 });
             },
-            param: {file, jsDir, requestHost, pwd, drpy, SitesMap, jsEncoder},
+            param: {file, jsDir, requestHost, pwd, drpyS, SitesMap, jsEncoder},
             id: file,
         };
     });
@@ -197,7 +197,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
         const dr2_tasks = dr2_valid_files.map((file) => {
             return {
-                func: async ({file, dr2Dir, requestHost, pwd, drpy, SitesMap}) => {
+                func: async ({file, dr2Dir, requestHost, pwd, drpyS, SitesMap}) => {
                     const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                     let ruleObject = {
                         searchable: 0, // 固定值
@@ -210,7 +210,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     // console.log('dr2 header:', header);
                     if (!header || forceHeader) {
                         try {
-                            ruleObject = await drpy.getRuleObject(path.join(filePath));
+                            ruleObject = await drpyS.getRuleObject(path.join(filePath));
                         } catch (e) {
                             throw new Error(`Error parsing rule object for file: ${file}, ${e.message}`);
                         }
@@ -300,7 +300,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         }
                     });
                 },
-                param: {file, dr2Dir, requestHost, pwd, drpy, SitesMap},
+                param: {file, dr2Dir, requestHost, pwd, drpyS, SitesMap},
                 id: file,
             };
         });
@@ -462,7 +462,7 @@ async function generateParseJSON(jxDir, requestHost) {
     let parses = [];
     const tasks = jx_files.map((file) => {
         return {
-            func: async ({file, jxDir, requestHost, drpy}) => {
+            func: async ({file, jxDir, requestHost, drpyS}) => {
                 const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                 const api = `${requestHost}/parse/${baseName}?url=`;  // 使用请求的 host 地址，避免硬编码端口
 
@@ -497,7 +497,7 @@ async function generateParseJSON(jxDir, requestHost) {
                     }
                 };
                 try {
-                    let _jxObject = await drpy.getJx(path.join(jxDir, file));
+                    let _jxObject = await drpyS.getJx(path.join(jxDir, file));
                     jxObject = {...jxObject, ..._jxObject};
                 } catch (e) {
                     throw new Error(`Error parsing jx object for file: ${file}, ${e.message}`);
@@ -511,7 +511,7 @@ async function generateParseJSON(jxDir, requestHost) {
                     header: jxObject.header
                 });
             },
-            param: {file, jxDir, requestHost, drpy},
+            param: {file, jxDir, requestHost, drpyS},
             id: file,
         };
     });
