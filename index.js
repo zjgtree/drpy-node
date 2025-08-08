@@ -61,6 +61,12 @@ fastify.register(fastifyStatic, {
     }
 });
 
+fastify.register(fastifyStatic, {
+    root: catDir,
+    prefix: '/cat/', // 新的访问路径前缀
+    decorateReply: false, // 禁用 sendFile
+});
+
 // 注册插件以支持 application/x-www-form-urlencoded
 fastify.register(formBody);
 

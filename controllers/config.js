@@ -20,6 +20,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     const jsDir = options.jsDir;
     const dr2Dir = options.dr2Dir;
     const pyDir = options.pyDir;
+    const catDir = options.catDir;
     const configDir = options.configDir;
     const jsonDir = options.jsonDir;
     const subFilePath = options.subFilePath;
@@ -392,6 +393,92 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
         });
 
         await batchExecute(py_tasks, listener);
+
+    }
+
+    // 根据用户是否启用cat源去生成对应配置
+    if (ENV.get('enable_cat', '1') === '1') {
+        const cat_files = readdirSync(catDir);
+        let cat_valid_files = cat_files.filter((file) => file.endsWith('.js') && !file.startsWith('_')); // 筛选出不是 "_" 开头的 .py 文件
+        // log(py_valid_files);
+        log(`开始生成catvod的t3配置，catDir:${catDir},源数量: ${cat_valid_files.length}`);
+
+        const cat_tasks = cat_valid_files.map((file) => {
+            return {
+                func: async ({file, catDir, requestHost, pwd, SitesMap}) => {
+                    const baseName = path.basename(file, '.js'); // 去掉文件扩展名
+                    const extJson = path.join(catDir, baseName + '.json');
+                    let api = `${requestHost}/cat/${file}`;
+                    let ext = existsSync(extJson) ? `${requestHost}/cat/${file}` : '';
+                    if (pwd) {
+                        api += `?pwd=${pwd}`;
+                        if (ext) {
+                            ext += `?pwd=${pwd}`;
+                        }
+                    }
+                    let ruleObject = {
+                        searchable: 1, // 固定值
+                        filterable: 1, // 固定值
+                        quickSearch: 1, // 固定值
+                    };
+                    let ruleMeta = {...ruleObject};
+                    const filePath = path.join(catDir, file);
+                    const header = await FileHeaderManager.readHeader(filePath);
+                    // console.log('py header:', header);
+                    if (!header || forceHeader) {
+                        const fileContent = await readFile(filePath, 'utf-8');
+                        const title = extractNameFromCode(fileContent) || baseName;
+                        Object.assign(ruleMeta, {
+                            title: title,
+                            lang: 'cat',
+                        });
+                        // console.log('py ruleMeta:', ruleMeta);
+                        await FileHeaderManager.writeHeader(filePath, ruleMeta);
+                    } else {
+                        Object.assign(ruleMeta, header);
+                    }
+                    if (!isLoaded) {
+                        const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
+                        console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
+                    }
+                    ruleMeta.title = enableRuleName ? ruleMeta.title || baseName : baseName;
+
+                    let fileSites = [];
+                    if (baseName === 'push_agent') {
+                        let key = 'push_agent';
+                        let name = `${ruleMeta.title}(cat)`;
+                        fileSites.push({key, name, ext});
+                    } else if (SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                        SitesMap[baseName].forEach((it) => {
+                            let key = `catvod_${it.alias}`;
+                            let name = `${it.alias}(cat)`;
+                            let _ext = updateQueryString(ext, it.queryStr);
+                            fileSites.push({key, name, ext: _ext});
+                        });
+                    } else {
+                        let key = `catvod_${ruleMeta.title}`;
+                        let name = `${ruleMeta.title}(cat)`;
+                        fileSites.push({key, name, ext});
+                    }
+
+                    fileSites.forEach((fileSite) => {
+                        const site = {
+                            key: fileSite.key,
+                            name: fileSite.name,
+                            type: 3, // 固定值
+                            api,
+                            ...ruleMeta,
+                            ext: fileSite.ext || "", // 固定为空字符串
+                        };
+                        sites.push(site);
+                    });
+                },
+                param: {file, catDir, requestHost, pwd, SitesMap},
+                id: file,
+            };
+        });
+
+        await batchExecute(cat_tasks, listener);
 
     }
 

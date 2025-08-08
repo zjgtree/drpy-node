@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -15,7 +15,8 @@
     "packageJS": "node package.js",
     "packageJS-green": "node package.js -g",
     "gzip-1": "node controllers/encoder.js json/十六万歌曲.json",
-    "ungzip-1": "node controllers/decoder.js json/十六万歌曲.json.gz"
+    "ungzip-1": "node controllers/decoder.js json/十六万歌曲.json.gz",
+    "moontv": "node scripts/moontv.mjs 采集2025.json -p"
   },
   "engines": {
     "node": ">17 <23"

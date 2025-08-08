@@ -1,5 +1,16 @@
 # drpyS更新记录
 
+### 20250808
+
+更新至V1.2.7
+
+catvod源支持，更新部分源
+
+1. 把月亮影视的底裤扒了，它的源配置为我所用 `采集2025静态.json`
+   ，原链接为[moontv](https://github.com/LunaTechLab/MoonTV/blob/main/config.json)
+2. spider/catvod目录新增原生js支持
+3. 增加 & 修复源
+
 ### 20250805
 
 更新至V1.2.6

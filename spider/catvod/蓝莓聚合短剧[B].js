@@ -1,6 +1,6 @@
 /*
  @header({
-  lang: 'dr2'
+  lang: 'cat'
 })
 */
 
