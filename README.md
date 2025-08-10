@@ -1,7 +1,7 @@
 # drpyS(drpy-node)
 
 nodejs作为服务端的drpy实现。全面升级异步写法  
-~~积极开发中，每日一更~~，当前进度 `66%`  
+~~积极开发中，每日一更~~，当前进度 `68%`  
 ~~找工作中，随缘更新~~  
 上班当牛马，下班要带娃，阶段性佛系趁娃睡觉熬夜更新
 
@@ -13,6 +13,8 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [接口压测教程](/docs/httpTest.md)
 * [央视点播解析工具](/proxy/央视大全[官]/index.html)
 * [cookie管理插件](/apps/cookie-butler/index.html)
+* [cron表达式插件](/apps/cron-generator/index.html)
+* [一些接口说明](docs/apidoc.md)
 * [本站防止爬虫协议](/robots.txt)
 * [本项目主页-免翻](https://git-proxy.playdreamer.cn/hjdhnx/drpy-node)
 * [DS源适配猫影视](https://github.com/hjdhnx/CatPawOpen/tree/ds-cat)
@@ -21,7 +23,11 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 
 ## 更新记录
 
-### 20250806
+### 20250810
+
+更新至V1.2.8
+
+### 20250808
 
 更新至V1.2.7
 
@@ -65,6 +71,7 @@ todo:
 * [puppeteer使用教程](docs/pupInstall.md)
 * [drpyS源属性说明](docs/ruleAttr.md)
 * [drpy2写源简述](docs/ruleDesc.md)
+* [关姐算法搭建说明](docs/suanfa.md)
 
 ## 问题说明
 

@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "packageJS-green": "node package.js -g",
     "gzip-1": "node controllers/encoder.js json/十六万歌曲.json",
     "ungzip-1": "node controllers/decoder.js json/十六万歌曲.json.gz",
-    "moontv": "node scripts/moontv.mjs 采集2025.json -p"
+    "moontv": "node scripts/mjs/moontv.mjs 采集2025.json -p"
   },
   "engines": {
     "node": ">17 <23"
@@ -30,6 +30,7 @@
     "@fastify/static": "7.0.4",
     "axios": "^1.7.9",
     "cheerio": "^1.0.0",
+    "cron": "^4.3.3",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
