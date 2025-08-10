@@ -29,29 +29,30 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     const files = readdirSync(jsDir);
     let valid_files = files.filter((file) => file.endsWith('.js') && !file.startsWith('_')); // 筛选出不是 "_" 开头的 .js 文件
     let sort_list = [];
+    let sort_file = path.join(path.dirname(subFilePath), `./order_common.html`);
+    if (!existsSync(sort_file)) {
+        sort_file = path.join(path.dirname(subFilePath), `./order_common.example.html`);
+    }
     if (sub) {
         if (sub.mode === 0) {
             valid_files = valid_files.filter(it => (new RegExp(sub.reg || '.*')).test(it));
         } else if (sub.mode === 1) {
             valid_files = valid_files.filter(it => !(new RegExp(sub.reg || '.*')).test(it));
         }
-        let sort_file = path.join(path.dirname(subFilePath), `./order_common.html`);
-        if (!existsSync(sort_file)) {
-            sort_file = path.join(path.dirname(subFilePath), `./order_common.example.html`);
-        }
+
         if (sub.sort) {
             sort_file = path.join(path.dirname(subFilePath), `./${sub.sort}.html`);
             if (!existsSync(sort_file)) {
                 sort_file = path.join(path.dirname(subFilePath), `./${sub.sort}.example.html`);
             }
         }
-        if (existsSync(sort_file)) {
-            console.log('sort_file:', sort_file);
-            let sort_file_content = readFileSync(sort_file, 'utf-8');
-            // console.log(sort_file_content)
-            sort_list = sort_file_content.split('\n').filter(it => it.trim()).map(it => it.trim());
-            // console.log(sort_list);
-        }
+    }
+    if (existsSync(sort_file)) {
+        console.log('sort_file:', sort_file);
+        let sort_file_content = readFileSync(sort_file, 'utf-8');
+        // console.log(sort_file_content)
+        sort_list = sort_file_content.split('\n').filter(it => it.trim()).map(it => it.trim());
+        // console.log(sort_list);
     }
     let sites = [];
 
@@ -538,6 +539,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     if (ENV.get('hide_adult') === '1') {
         sites = sites.filter(it => !(new RegExp('\\[[密]\\]|密+')).test(it.name));
     }
+    // console.log('sort_list:', sort_list);
     sites = naturalSort(sites, 'name', sort_list);
     return {sites, spider: link_jar};
 }
