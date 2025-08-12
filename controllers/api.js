@@ -5,10 +5,10 @@ import {ENV} from "../utils/env.js";
 import {validatePwd} from "../utils/api_validate.js";
 import {startJsonWatcher, getApiEngine} from "../utils/api_helper.js";
 import * as drpyS from '../libs/drpyS.js';
-import * as drpy2 from '../libs/drpy2.js';
-import * as hipy from '../libs/hipy.js';
-import * as xbpq from '../libs/xbpq.js';
-import * as catvod from '../libs/catvod.js';
+import drpy2 from '../libs/drpy2.js';
+import hipy from '../libs/hipy.js';
+import xbpq from '../libs/xbpq.js';
+import catvod from '../libs/catvod.js';
 
 const ENGINES = {
     drpyS,

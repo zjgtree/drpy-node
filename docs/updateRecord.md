@@ -1,5 +1,21 @@
 # drpyS更新记录
 
+### 20250812
+
+更新至V1.2.9
+
+已知bug: cat源动态修改代码后如果没重启后端服务，修改的内容不生效(通过打日志看出来的，原因是esm模块缓存)  
+因此代码里通过`?v=文件hash值` 绕过esm缓存机制，不确定会不会造成内存占用问题。  
+定时任务脚本也存在类似问题，但是没做绕过，必须重启服务。
+
+```javascript
+const scriptUrl = `${pathToFileURL(filePath).href}?v=${fileHash}`;
+```
+
+1. py和猫源支持头信息处放ext扩展参数
+2. cat猫源支持T4模式(需要设置中心enable_cat设置为2)
+3. cat t4源支持使用 `req` `jsoup` 等对象，由于drpyS导入在前，理论上drpyS里所有globalThis暴露的变量都可以用
+
 ### 20250810
 
 更新至V1.2.8
