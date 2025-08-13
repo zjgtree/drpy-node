@@ -287,9 +287,9 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                             };
                             // 添加isdr2参数到API URL
                             if (pwd) {
-                                t4site.api += `?pwd=${pwd}&adapt=dr`;
+                                t4site.api += `?pwd=${pwd}&do=dr`;
                             } else {
-                                t4site.api += `?adapt=dr`;
+                                t4site.api += `?do=dr`;
                             }
 
                             // 处理传参源的API参数
@@ -411,7 +411,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 func: async ({file, catDir, requestHost, pwd, SitesMap}) => {
                     const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                     const extJson = path.join(catDir, baseName + '.json');
-                    let api = enable_cat === '1' ? `${requestHost}/cat/${file}` : `${requestHost}/api/${baseName}?adapt=cat`;  // 使用请求的 host 地址，避免硬编码端口
+                    let api = enable_cat === '1' ? `${requestHost}/cat/${file}` : `${requestHost}/api/${baseName}?do=cat`;  // 使用请求的 host 地址，避免硬编码端口
                     let ext = existsSync(extJson) ? `${requestHost}/cat/${file}` : '';
 
                     if (pwd) {

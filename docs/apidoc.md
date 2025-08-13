@@ -49,7 +49,7 @@
 | pg      | number | 页码，默认 1                                |
 | ext     | string | Base64 编码的 JSON 筛选参数                   |
 | extend  | string | 扩展参数（直接字符串,根据/config路由对应sites的ext属性传递） |
-| adapt   | string | 自定义源适配器，默认ds，可不传                       |
+| do      | string | 自定义源适配器，默认ds，可不传                       |
 
 #### 功能分支
 
@@ -192,12 +192,3 @@
 3. `ext` 参数必须是 **Base64 编码的 JSON 字符串**，否则会报“筛选参数错误”。
 4. 流媒体内容可能会通过 `/mediaProxy` 重定向处理。
 5. 建议在请求时加上 `pg` 参数避免默认第一页。
-
-## 服务特殊显式接口说明
-
-- 获取定时任务列表 [/tasks](/tasks)
-- 立即执行全部任务 [/execute-now/:taskName](/execute-now/)
-- 立即执行钉钉消息任务 [/execute-now/dingtalk_test](/execute-now/dingtalk_test)
-- 立即执行企业微信消息任务 [/execute-now/wechat_test](/execute-now/wechat_test)
-- 获取指定任务信息 [/tasks/:taskName](/tasks/)
-

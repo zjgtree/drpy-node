@@ -1,7 +1,7 @@
 import path from "path";
 import {readFile} from "fs/promises";
 import {getSitesMap} from "../utils/sites-map.js";
-import {computeHash, getNowTime, deepCopy} from "../utils/utils.js";
+import {computeHash, deepCopy, getNowTime} from "../utils/utils.js";
 import {fileURLToPath, pathToFileURL} from 'url';
 import {md5} from "../libs_drpy/crypto-util.js";
 
@@ -14,11 +14,6 @@ const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/catvod');
 
 
-const getRule = async function (filePath, env) {
-    const moduleObject = await init(filePath, env);
-    return JSON.stringify(moduleObject);
-}
-
 const json2Object = function (json) {
     if (!json) {
         return {}
@@ -26,6 +21,38 @@ const json2Object = function (json) {
         return json
     }
     return JSON.parse(json);
+}
+
+const loadEsmWithHash = async function (filePath, fileHash) {
+    const scriptUrl = `${pathToFileURL(filePath).href}?v=${fileHash}`;
+    return await import(scriptUrl);
+}
+
+const loadEsmWithEnv = async function (filePath, env) {
+    const rawCode = await readFile(filePath, 'utf8');
+    let injectedCode = rawCode;
+    const esm_flag1 = 'export function __jsEvalReturn';
+    const esm_flag2 = 'export default';
+    const polyfill_code = 'var ENV={};\nvar getProxyUrl=null;\nexport const initEnv = (env)=>{ENV = env;if(env.getProxyUrl){getProxyUrl=env.getProxyUrl}};\n';
+    if (rawCode.includes(esm_flag1)) {
+        injectedCode = rawCode.replace(esm_flag1, `${polyfill_code}${esm_flag1}`)
+    } else if (rawCode.includes('export default')) {
+        injectedCode = rawCode.replace(esm_flag2, `${polyfill_code}${esm_flag2}`)
+    }
+    // console.log(injectedCode);
+    // // 创建数据URI模块
+    const dataUri = `data:text/javascript;base64,${Buffer.from(injectedCode).toString('base64')}`;
+    const module = await import(dataUri);
+    const initEnv = module.initEnv;
+    if (typeof initEnv === 'function' && env) {
+        initEnv(env);
+    }
+    return module
+}
+
+const getRule = async function (filePath, env) {
+    const moduleObject = await init(filePath, env);
+    return JSON.stringify(moduleObject);
 }
 
 const init = async function (filePath, env = {}, refresh) {
@@ -48,29 +75,30 @@ const init = async function (filePath, env = {}, refresh) {
         let hashMd5 = md5(filePath + '#pAq#' + moduleExt);
         if (moduleCache.has(hashMd5) && !refresh) {
             const cached = moduleCache.get(hashMd5);
-            if (cached.hash === fileHash) {
+            // 除hash外还必须保证proxyUrl实时相等，避免本地代理url的尴尬情况
+            if (cached.hash === fileHash && cached.proxyUrl === env.proxyUrl) {
                 return cached.moduleObject;
             }
         }
         log(`Loading module: ${filePath}`);
         let t1 = getNowTime();
-        // const scriptUrl = pathToFileURL(filePath).href;
-        const scriptUrl = `${pathToFileURL(filePath).href}?v=${fileHash}`;
-        // console.log(scriptUrl);
-        const module = await import(scriptUrl);
+        const module = await loadEsmWithEnv(filePath, env);
+        // console.log('module:', module);
         let rule;
         if (module && module.__jsEvalReturn && typeof module.__jsEvalReturn === 'function') {
             rule = module.__jsEvalReturn();
         } else {
             rule = module.default || module;
         }
-        // console.log(rule);
+        // console.log('rule:', rule);
+        // console.log('globalThis.ENV:', globalThis.ENV);
+        // console.log('globalThis.getProxyUrl:', globalThis.getProxyUrl);
         // 加载 init
         await rule.init(moduleExt || {});
         let t2 = getNowTime();
         const moduleObject = deepCopy(rule);
         moduleObject.cost = t2 - t1;
-        moduleCache.set(hashMd5, {moduleObject, hash: fileHash});
+        moduleCache.set(hashMd5, {moduleObject, hash: fileHash, proxyUrl: env.proxyUrl});
         return moduleObject;
     } catch (error) {
         console.log(`Error in catvod.init :${filePath}`, error);

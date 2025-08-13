@@ -57,7 +57,7 @@ export default (fastify, options, done) => {
 
             // console.log(`proxyUrl:${proxyUrl}`);
             function getEnv(moduleName) {
-                const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
+                const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=${query.do||'ds'}`;
                 const getProxyUrl = function () {
                     return proxyUrl
                 };
@@ -206,8 +206,9 @@ export default (fastify, options, done) => {
     fastify.get('/proxy/:module/*', async (request, reply) => {
         const moduleName = request.params.module;
         const query = request.query; // 获取 query 参数
-
+        // console.log(query);
         let {apiEngine, modulePath} = getApiEngine(ENGINES, moduleName, query, options);
+        // console.log(modulePath);
         if (!existsSync(modulePath)) {
             reply.status(404).send({error: `Module ${moduleName} not found`});
             return;
@@ -228,7 +229,7 @@ export default (fastify, options, done) => {
         const fServer = fastify.server;
 
         function getEnv(moduleName) {
-            const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
+            const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=${query.do||'ds'}`;
             const getProxyUrl = function () {
                 return proxyUrl
             };

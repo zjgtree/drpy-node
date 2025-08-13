@@ -13,7 +13,10 @@ function init(ext) {
 }
 
 function home(filter) {
-    console.log("home");
+    console.log('typeof getProxyUrl:', typeof getProxyUrl);
+    if (typeof getProxyUrl === 'function') {
+        console.log('getProxyUrl():', getProxyUrl());
+    }
     let classes = [];
     classes.push({
         'type_id': 'test',
@@ -94,6 +97,12 @@ function search(wd, quick) {
     })
 }
 
+function proxy(params) {
+    console.log("proxy:", params);
+    console.log('getProxyUrl():', getProxyUrl());
+    return [200, 'text/plain;charset=utf-8', 'hello drpyS, 我是猫测试的本地代理', null];
+}
+
 // 导出函数对象
 export default {
     init: init,
@@ -103,4 +112,5 @@ export default {
     detail: detail,
     play: play,
     search: search,
+    proxy: proxy,
 }

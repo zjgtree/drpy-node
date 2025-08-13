@@ -19,6 +19,10 @@ let imghost = `https://${JSON.parse((await req(`${host}/api/appAuthConfig`)).con
 
 //分类数据
 async function home(filter) {
+    // console.log('typeof getProxyUrl:', typeof getProxyUrl);
+    // if (typeof getProxyUrl === 'function') {
+    //     console.log('getProxyUrl():', getProxyUrl());
+    // }
     let classes = [{type_id: '1', type_name: '电影',}, {type_id: '2', type_name: '电视剧',}, {
         type_id: '3',
         type_name: '动漫',

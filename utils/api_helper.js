@@ -33,7 +33,8 @@ export function startJsonWatcher(ENGINES, jsonDir) {
 }
 
 export function getApiEngine(engines, moduleName, query, options) {
-    const adapt = query.adapt;
+    // const adapt = query.adapt;
+    const adapt = query.do; // js 或者 ds 都视为ds
     let apiEngine;
     let moduleDir;
     let _ext;

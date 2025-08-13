@@ -4,6 +4,7 @@ import {readdir, stat} from 'fs/promises';
 import {pathToFileURL} from 'url';
 import {CronJob} from 'cron';
 import {validateBasicAuth} from "../utils/api_validate.js"; // 官方 cron
+import {toBeijingTime} from "../utils/datetime-format.js"
 
 const scripts_exclude = ['moontv.mjs', 'kzz.mjs'];
 const enable_tasker = Number(process.env.ENABLE_TASKER) || 0;
@@ -226,8 +227,8 @@ export default (fastify, options, done) => {
             name: task.name,
             schedule: task.schedule,
             status: task.status,
-            lastRun: task.lastRun,
-            nextRun: task.nextRun,
+            lastRun: toBeijingTime(task.lastRun),
+            nextRun: toBeijingTime(task.nextRun),
             path: task.path
         }));
 
@@ -249,8 +250,8 @@ export default (fastify, options, done) => {
             name: task.name,
             schedule: task.schedule,
             status: task.status,
-            lastRun: task.lastRun,
-            nextRun: task.nextRun,
+            lastRun: toBeijingTime(task.lastRun),
+            nextRun: toBeijingTime(task.nextRun),
             path: task.path
         };
     });
