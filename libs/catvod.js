@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/catvod');
+const enable_cat_debug = Number(process.env.CAT_DEBUG) || 0;
 
 
 const json2Object = function (json) {
@@ -82,7 +83,12 @@ const init = async function (filePath, env = {}, refresh) {
         }
         log(`Loading module: ${filePath}`);
         let t1 = getNowTime();
-        const module = await loadEsmWithEnv(filePath, env);
+        let module;
+        if (enable_cat_debug) {
+            module = await loadEsmWithHash(filePath, fileHash);
+        } else {
+            module = await loadEsmWithEnv(filePath, env);
+        }
         // console.log('module:', module);
         let rule;
         if (module && module.__jsEvalReturn && typeof module.__jsEvalReturn === 'function') {
