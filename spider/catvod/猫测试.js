@@ -12,11 +12,22 @@ function init(ext) {
     console.log('init');
 }
 
-function home(filter) {
+function qjs_test() {
     console.log('typeof getProxyUrl:', typeof getProxyUrl);
     if (typeof getProxyUrl === 'function') {
         console.log('getProxyUrl():', getProxyUrl());
     }
+    const t1 = Date.now()
+    let str = '';
+    for (let i = 0; i < 1000_000; i++) {
+        str += 'a';
+    }
+    const t2 = Date.now()
+    console.log(`qjs字符串拼接测试耗时: ${Math.ceil(t2 - t1)} ms`);
+}
+
+function home(filter) {
+    qjs_test();
     let classes = [];
     classes.push({
         'type_id': 'test',
