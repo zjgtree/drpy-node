@@ -45,9 +45,6 @@ export default (fastify, options, done) => {
             // console.log('moduleExt:', typeof moduleExt, moduleExt);
             const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
             const hostname = request.hostname;
-            // const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/api/', '/proxy/') + '/?do=js';
-            // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
-            // console.log('proxyUrl:', proxyUrl);
             const publicUrl = `${protocol}://${hostname}/public/`;
             const jsonUrl = `${protocol}://${hostname}/json/`;
             const httpUrl = `${protocol}://${hostname}/http`;
@@ -334,8 +331,7 @@ export default (fastify, options, done) => {
         const fServer = fastify.server;
 
         function getEnv(moduleName) {
-            // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
-            const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/parse/', '/proxy/') + '/?do=js';
+            const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/parse/', '/proxy/') + `/?do=${query.do||"ds"}`;
             const getProxyUrl = function () {
                 return proxyUrl
             };

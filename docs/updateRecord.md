@@ -7,6 +7,8 @@
 1. 定时任务 增加 `QQ邮箱` 的消息推送方式
 2. `cat源` 增加调试模式，但是不支持 `getProxyUrl` 等方法，需要在环境变量.env文件里启用 `CAT_DEBUG=1`。
    详情参考 [猫源调试教程](/docs/catDebug.md)
+3. `getProxyUrl` 换成 `getProxy`，兼容T3猫源使用壳子的本地代理,修复 `央视大全` 错误的本地代理获取
+4. 修复`番茄小说` 的正文阅读和搜索。分类接口坏的没能力修。央视最新视频高清下载方案目前只有通过 [`CCTV-GO`](https://wwvy.lanzouo.com/ieEq533kiofe) 包含的 `cbox.exe` 本地解密，无法适配本项目。
 
 ### 20250813
 

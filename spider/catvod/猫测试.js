@@ -13,9 +13,9 @@ function init(ext) {
 }
 
 function qjs_test() {
-    console.log('typeof getProxyUrl:', typeof getProxyUrl);
-    if (typeof getProxyUrl === 'function') {
-        console.log('getProxyUrl():', getProxyUrl());
+    console.log('typeof getProxy:', typeof getProxy);
+    if (typeof getProxy === 'function') {
+        console.log('getProxy(true):', getProxy(true));
     }
     const t1 = Date.now()
     let str = '';
@@ -110,7 +110,7 @@ function search(wd, quick) {
 
 function proxy(params) {
     console.log("proxy:", params);
-    console.log('getProxyUrl():', getProxyUrl());
+    console.log('getProxy():', getProxy());
     return [200, 'text/plain;charset=utf-8', 'hello drpyS, 我是猫测试的本地代理', null];
 }
 
