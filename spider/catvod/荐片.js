@@ -9,6 +9,7 @@
 */
 
 async function init(cfg) {
+    const ext = cfg.ext;
     cfg.skey = '';
     cfg.stype = '3';
 }

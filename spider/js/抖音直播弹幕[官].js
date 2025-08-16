@@ -61,7 +61,7 @@ var rule = {
         let select_partition = MY_FL.sort || MY_CATE;
         const partition = select_partition.split('$')[0];
         const type = select_partition.split('$')[1];
-        let url = `https://live.douyin.com/webcast/web/partition/detail/room/?aid=6383&count=15&partition=${partition}&partition_type=${type}&offset=${page}`;
+        let url = `https://live.douyin.com/webcast/web/partition/detail/room/v2/?aid=6383&count=15&partition=${partition}&partition_type=${type}&offset=${page}`;
         let html = await request(url, {
             headers: rule.headers
         });
@@ -72,7 +72,7 @@ var rule = {
                 title: it.room.title,
                 desc: it.room.owner.nickname + '(🔥' + it.room.stats.user_count_str + ')',
                 img: it.room.cover.url_list[0],
-                url: `https://live.douyin.com/webcast/room/web/enter/?aid=6383&live_id=1&device_platform=web&enter_from=web_live&browser_language=zh-CN&browser_platform=Linux+aarch64&browser_name=Chrome&browser_version=58.0.3029.110&web_rid=${it.web_rid}&room_id_str=${it.room.id_str}##${it.room.id_str}`
+                url: `https://live.douyin.com/webcast/room/web/enter/?aid=6383&app_name=douyin_web&live_id=1&device_platform=web&enter_from=web_live&browser_language=zh-CN&browser_platform=Linux+aarch64&browser_name=Chrome&browser_version=58.0.3029.110&web_rid=${it.web_rid}&room_id_str=${it.room.id_str}&enter_source=&is_need_double_stream=false&insert_task_id=&live_reason=&msToken=8wFjU02av0x2CQpyV09iun_1VawvtKzGS0gKEjA-eBjR3Z2Q2ZxicZ3wByfTPmaZEArRWz3pBRvb9DuLU05W7lTpleOKiBDf3_ce0L-Pai0cb6eMv-EevqjPdfaMRD1c9s_CIy2b_7FkQfTTtKtlA_G6g3bAIeZYKtolM3WRIfw0vGtAUD6svw%3D%3D&a_bogus=Dj05gtXLO2WROdKb8Or4ySCl51o%2FN0Sy%2FaidRupu9xYkOhzGcuNewxt%2Fbxof4gfDjupihK1HAdzlbxdcsdXT1ArpumpvuzUyItII9Xmo2qZsTPkhHHSkStTzzhMzUCTYscn4E-iXltXqXxP1irPzUQ1Jy%2FECmOYp%2Fr5D4Q8onNjWD8zc2NeIKafATviY-QI-TE%3D%3D##${it.room.id_str}`
             })
         })
         return setResult(d);
@@ -112,7 +112,7 @@ var rule = {
         let {input} = this;
         let page = 10 * (pg - 1);
         rule.headers.referer = `${rule.host}/`;
-        let url = `https://www.douyin.com/aweme/v1/web/live/search/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_live&keyword=${wd}&offset=${page}&count=10&os_version=10`;
+       let url = `https://www.douyin.com/aweme/v1/web/general/search/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_live&keyword=${wd}&offset=${page}&count=10&os_version=10`;
         let html = await request(url, {
             headers: rule.headers
         });

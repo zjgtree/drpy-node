@@ -184,6 +184,7 @@ export default (fastify, options, done) => {
                     ...resultHome,
                     // list: resultHomeVod,
                 };
+                // console.log('resultHomeVod:',resultHomeVod);
                 if (Array.isArray(resultHomeVod) && resultHomeVod.length > 0) {
                     Object.assign(result, {list: resultHomeVod})
                 }

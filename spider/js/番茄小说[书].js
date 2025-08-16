@@ -23,7 +23,7 @@ var rule = {
     desc: '番茄小说纯js版本',
     host: 'https://fanqienovel.com/',
     homeUrl: 'https://fanqienovel.com/api/author/book/category_list/v0/',
-    url: '/api/author/library/book_list/v0/?page_count=18&page_index=(fypage-1)&gender=-1&category_id=fyclass&creation_status=-1&word_count=-1&sort=0#fyfilter',
+    url: '/api/author/library/book_list/v0/?page_count=18&page_index=(fypage-1)&gender=1&category_id=fyclass&creation_status=-1&word_count=-1&book_type=-1&sort=0#fyfilter',
     // searchUrl: 'https://api5-normal-lf.fqnovel.com/reading/bookapi/search/page/v/?query=**&aid=1967&channel=0&os_version=0&device_type=0&device_platform=0&iid=466614321180296&passback=((fypage-1)*10)&version_code=999',
     searchUrl: 'http://fqweb.jsj66.com/search?query=**&page=fypage',
     searchable: 2,
@@ -40,6 +40,7 @@ var rule = {
     },
     headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+        
     },
     config: {
         api: 'https://novel.snssdk.com/api',

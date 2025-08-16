@@ -6,6 +6,8 @@ import qs from 'qs';
 import {fileURLToPath} from 'url';
 import formBody from '@fastify/formbody';
 import {validateBasicAuth, validateJs, validatePwd} from "./utils/api_validate.js";
+// 注册自定义import钩子
+import './utils/esm-register.mjs';
 // 注册控制器
 import {registerRoutes} from './controllers/index.js';
 

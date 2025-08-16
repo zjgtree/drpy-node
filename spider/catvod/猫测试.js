@@ -8,7 +8,8 @@
 })
 */
 
-function init(ext) {
+function init(cfg) {
+    const ext = cfg.ext;
     console.log('init');
 }
 
@@ -54,7 +55,10 @@ function homeVod(params) {
 }
 
 function category(tid, pg, filter, extend) {
-    console.log("category");
+    console.log(`category  pg: ${pg}`);
+    if (pg > 1) {
+        return JSON.stringify({list: []})
+    }
     let d = [];
     d.push({
         vod_name: '测试',
@@ -110,7 +114,7 @@ function search(wd, quick) {
 
 function proxy(params) {
     console.log("proxy:", params);
-    console.log('getProxy():', getProxy());
+    console.log('getProxy(true):', getProxy(true));
     return [200, 'text/plain;charset=utf-8', 'hello drpyS, 我是猫测试的本地代理', null];
 }
 

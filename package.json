@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "dev": "node index.js",
     "dev-win": "chcp 65001 && node --trace-deprecation index.js",
     "dev-win-debug": "chcp 65001 && node --trace-deprecation --inspect index.js",
+    "dev-win-debug2": "chcp 65001 && node --trace-deprecation --inspect --experimental-loader ./utils/esm-loader.mjs index.js",
     "pm2": "pm2 start index.js --name drpys",
     "node22": "node --experimental-sqlite index.js",
     "node22-win": "chcp 65001 && node --trace-deprecation --experimental-sqlite index.js",

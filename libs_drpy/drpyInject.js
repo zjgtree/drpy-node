@@ -3,7 +3,7 @@ import axiosX from './axios.min.js';
 import crypto from 'crypto';
 import http from "http";
 import https from 'https';
-import fs from 'node:fs';
+import fs from 'fs';
 import qs from 'qs';
 import _ from './underscore-esm.min.js'
 // import _ from './underscore-esm.js'

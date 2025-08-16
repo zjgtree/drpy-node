@@ -25,33 +25,56 @@ const json2Object = function (json) {
     return JSON.parse(json);
 }
 
-const loadEsmWithHash = async function (filePath, fileHash) {
+const loadEsmWithHash = async function (filePath, fileHash, env) {
     const scriptUrl = `${pathToFileURL(filePath).href}?v=${fileHash}`;
-    return await import(scriptUrl);
+    const module = await import(scriptUrl);
+    const initEnv = module.initEnv;
+    if (typeof initEnv === 'function' && env) {
+        initEnv(env);
+    }
+    return module
 }
 
 const loadEsmWithEnv = async function (filePath, env) {
     const rawCode = await readFile(filePath, 'utf8');
     let injectedCode = rawCode;
+    // let injectedCode = rawCode.replaceAll('assets://js/lib/', '../catLib/'); // esm-rregister处理了，这里不管
+    // console.log('loadEsmWithEnv:', env);
     const esm_flag1 = 'export function __jsEvalReturn';
     const esm_flag2 = 'export default';
     const polyfill_code = `
 var _ENV={};
 var getProxyUrl=null;
 var getProxy=null;
-export const initEnv = (env)=>{
+export function initEnv(env){
     _ENV = env;
     if(env.getProxyUrl){
         getProxyUrl=env.getProxyUrl;
         getProxy=env.getProxyUrl
     }
-};`.trim() + '\n';
-    if (rawCode.includes(esm_flag1)) {
-        injectedCode = rawCode.replace(esm_flag1, `${polyfill_code}${esm_flag1}`)
-    } else if (rawCode.includes('export default')) {
-        injectedCode = rawCode.replace(esm_flag2, `${polyfill_code}${esm_flag2}`)
+}`.trim() + '\n';
+    if (injectedCode.includes(esm_flag1)) {
+        injectedCode = injectedCode.replace(esm_flag1, `${polyfill_code}${esm_flag1}`)
+    } else if (injectedCode.includes('export default')) {
+        injectedCode = injectedCode.replace(esm_flag2, `${polyfill_code}${esm_flag2}`)
     }
-    // console.log(injectedCode);
+
+    // 改为在 esm-register.mjs 里实现，这里注释掉
+    // if (injectedCode.includes('../catLib/crypto-js.js')) {
+    //     const cryptoJsPath = path.join(_lib_path, '../catLib', 'crypto-js.js');
+    //     // console.log('cryptoJsPath:',cryptoJsPath);
+    //     const cryptoHref = pathToFileURL(cryptoJsPath).href;
+    //     console.log('cryptoHref:', cryptoHref);
+    //     // const cryptoJsCode = await readFile(cryptoJsPath, 'utf-8');
+    //     // const cryptoJsBase64 = Buffer.from(cryptoJsCode).toString('base64');
+    //     injectedCode = injectedCode.replace(
+    //         '../catLib/crypto-js.js',
+    //         // `data:text/javascript;base64,${cryptoJsBase64}`
+    //         cryptoHref
+    //     );
+    // }
+
+    // console.log('injectedCode:\n', injectedCode);
     // // 创建数据URI模块
     const dataUri = `data:text/javascript;base64,${Buffer.from(injectedCode).toString('base64')}`;
     const module = await import(dataUri);
@@ -73,6 +96,12 @@ const init = async function (filePath, env = {}, refresh) {
         const fileHash = computeHash(fileContent);
         const moduleName = path.basename(filePath, '.js');
         let moduleExt = env.ext || '';
+        const default_init_cfg = {
+            stype: 4, //T3/T4 源类型
+            skey: `catvod_${moduleName}`,
+            sourceKey: `catvod_${moduleName}`,
+            ext: moduleExt,
+        };
         let SitesMap = getSitesMap(_config_path);
         if (moduleExt && SitesMap[moduleName]) {
             try {
@@ -96,7 +125,7 @@ const init = async function (filePath, env = {}, refresh) {
         let t1 = getNowTime();
         let module;
         if (enable_cat_debug) {
-            module = await loadEsmWithHash(filePath, fileHash);
+            module = await loadEsmWithHash(filePath, fileHash, env);
         } else {
             module = await loadEsmWithEnv(filePath, env);
         }
@@ -111,7 +140,7 @@ const init = async function (filePath, env = {}, refresh) {
         // console.log('globalThis.ENV:', globalThis.ENV);
         // console.log('globalThis.getProxyUrl:', globalThis.getProxyUrl);
         // 加载 init
-        await rule.init(moduleExt || {});
+        await rule.init(default_init_cfg);
         let t2 = getNowTime();
         const moduleObject = deepCopy(rule);
         moduleObject.cost = t2 - t1;
@@ -130,7 +159,8 @@ const home = async function (filePath, env, filter = 1) {
 
 const homeVod = async function (filePath, env) {
     const moduleObject = await init(filePath, env);
-    return json2Object(await moduleObject.homeVod());
+    const homeVodResult = json2Object(await moduleObject.homeVod());
+    return homeVodResult && homeVodResult.list ? homeVodResult.list : homeVodResult;
 }
 
 
