@@ -91,13 +91,15 @@ def call_spider_method(spider, method_name, args):
         print(f'parsed_args:{parsed_args}')
 
         if method_name == 'init':
-            spider, result = t4_spider_init(spider, *parsed_args)
+            extend = parsed_args[0] if parsed_args else ''
+            spider, result = t4_spider_init(spider, extend)
             #             result = spider.init(modules)
             return result
         else:
             if not hasattr(spider, '_init_ok_'):
                 #                 spider,_ = t4_spider_init(spider,*parsed_args) # 需要传extend参数，暂时没有好办法
-                spider, _ = t4_spider_init(spider, *parsed_args)
+                extend = parsed_args[0] if parsed_args else ''
+                spider, _ = t4_spider_init(spider, extend)
                 method = getattr(spider, invoke_method_name)
             result = method(*parsed_args)
         # 返回结果
