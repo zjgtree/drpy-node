@@ -230,7 +230,7 @@ class Spider(BaseSpider):  # 元类 默认的元类 type
         parse = 1
         url = id
         htmlTxt = self.custom_webReadFile(urlStr=url, header=self.header)
-        url = self.custom_RegexGetText(Text=htmlTxt, RegexText=r'(https{0,1}://.+?\.m3u8)', Index=1)
+        url = self.custom_RegexGetText(Text=htmlTxt, RegexText=r"url\s*:\s*['\"](https?://[^'\"]+?\.m3u8)['\"]", Index=1)
         if url.find('.m3u8') < 1:
             url = id
             parse = 0
