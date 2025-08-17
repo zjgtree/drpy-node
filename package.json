@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -41,6 +41,7 @@
     "form-data": "^4.0.4",
     "google-protobuf": "^3.21.4",
     "iconv-lite": "^0.6.3",
+    "import": "^0.0.6",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
     "lru-cache": "^9.1.2",
@@ -52,6 +53,7 @@
     "p-queue": "^8.0.1",
     "pino": "^9.7.0",
     "pinyin": "^4.0.0",
+    "python-shell": "^5.0.0",
     "qs": "^6.13.1",
     "queue": "^7.0.0",
     "rotating-file-stream": "^3.2.6",

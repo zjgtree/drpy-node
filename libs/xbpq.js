@@ -54,7 +54,7 @@ const homeVod = async function (filePath, env) {
 }
 
 
-const cate = async function (filePath, env, tid, pg = 1, filter = 1, extend = {}) {
+const category = async function (filePath, env, tid, pg = 1, filter = 1, extend = {}) {
     const moduleObject = await init(filePath, env);
     return json2Object(await moduleObject.category(tid, pg, filter, extend));
 }
@@ -91,7 +91,7 @@ export default {
     init,
     home,
     homeVod,
-    cate,
+    category,
     detail,
     search,
     play,

@@ -1,5 +1,16 @@
 # drpyS更新记录
 
+### 20250817
+
+更新至V1.2.13
+
+支持hipy源T4,参考[python环境](/docs/pyenv.md) 进行python依赖安装。
+需要保证终端输入 `python` 能正常识别到即可(保证本地安装了python并且有环境变量)
+
+1. 增加 `hipy` 适配器
+2. 新增依赖 `python-shell` 需要手动安装
+3. 统一libs接口 `cate` 改为 `category`
+
 ### 20250815
 
 更新至V1.2.12

@@ -21,7 +21,7 @@ console.log('__dirname:', __dirname);
         const result2 = await drpyS.homeVod(modulePath); // 调用 homeVod 方法
 
         console.log('Calling cate...');
-        const result3 = await drpyS.cate(modulePath); // 调用 cate 方法
+        const result3 = await drpyS.category(modulePath); // 调用 cate 方法
 
         console.log('Calling detail...');
         const result4 = await drpyS.detail(modulePath, {}, [1]); // 调用 detail 方法

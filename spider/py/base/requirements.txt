@@ -1,0 +1,7 @@
+requests
+lxml
+pycryptodome
+ujson
+pyquery
+jsonpath
+jpype1

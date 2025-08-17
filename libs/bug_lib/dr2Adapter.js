@@ -1098,7 +1098,7 @@ async function categoryParse(cateObj, rule) {
         // 同时设置全局变量，确保脚本可以访问
         globalThis.MY_FL = cateObj.extend;
         
-        const TYPE = "cate";
+        const TYPE = "category";
         var input = MY_URL;
         const MY_PAGE = cateObj.pg;
         var desc = "";
@@ -1760,10 +1760,6 @@ export async function category(filePath, env, tid, pg, filter, extend) {
     return parseJsonResult(result);
 }
 
-export async function cate(filePath, env, tid, pg, filter, extend) {
-    return category(filePath, env, tid, pg, filter, extend);
-}
-
 export async function detail(filePath, env, vod_url) {
     const { rule } = await init(filePath, env);
     vod_url=Array.isArray(vod_url) ? vod_url[0] : vod_url;
@@ -2072,7 +2068,6 @@ const drpy2 = {
     home,
     homeVod,
     category,
-    cate,
     detail,
     search,
     play,

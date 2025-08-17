@@ -1,16 +1,23 @@
-import {computeHash, deepCopy} from "../utils/utils.js";
+import path from "path";
 import {readFile} from "fs/promises";
+import {getSitesMap} from "../utils/sites-map.js";
+import {computeHash, deepCopy, getNowTime} from "../utils/utils.js";
+import {fileURLToPath} from 'url';
 import {md5} from "../libs_drpy/crypto-util.js";
+import {PythonShell, PythonShellError} from 'python-shell';
+import {fastify} from "../controllers/fastlogger.js";
 
+// 缓存已初始化的模块和文件 hash 值
 const moduleCache = new Map();
-
-
-const getRule = async function (filePath, env) {
-    const moduleObject = await init(filePath, env);
-    return JSON.stringify(moduleObject);
-}
+const ruleObjectCache = new Map();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const _data_path = path.join(__dirname, '../data');
+const _config_path = path.join(__dirname, '../config');
+const _lib_path = path.join(__dirname, '../spider/py');
+const timeout = 30000; // 30秒超时
 
 const json2Object = function (json) {
+    // console.log('json2Object:', json);
     if (!json) {
         return {}
     } else if (json && typeof json === 'object') {
@@ -19,23 +26,147 @@ const json2Object = function (json) {
     return JSON.parse(json);
 }
 
+const loadEsmWithHash = async function (filePath, fileHash, env) {
+    // 创建Python模块代理
+    const spiderProxy = {};
+    const bridgePath = path.join(_lib_path, '_bridge.py'); // 桥接脚本路径
+
+    // 创建方法调用函数
+    const callPythonMethod = async (methodName, ...args) => {
+
+        const options = {
+            mode: 'text',     // 使用JSON模式自动解析
+            pythonOptions: ['-u'], // 无缓冲输出
+            // scriptPath: path.dirname(bridgePath),
+            timeout: timeout,
+            env: {
+                "PYTHONIOENCODING": 'utf-8',
+            }
+        };
+        // 将参数序列化为JSON字符串
+        const jsonArgs = args.map(arg => JSON.stringify(arg));
+        console.log(methodName, ...jsonArgs);
+        try {
+            const results = await PythonShell.run(bridgePath, {
+                ...options,
+                args: [filePath, methodName, ...jsonArgs]
+            });
+            // 取最后一条返回
+            let vodResult = results.slice(-1)[0];
+            // if (methodName !== 'init') {
+            //     console.log(vodResult);
+            // }
+            if (typeof vodResult === 'string' && vodResult) {
+                switch (vodResult) {
+                    case 'None':
+                        vodResult = null;
+                        break;
+                    case 'True':
+                        vodResult = true;
+                        break;
+                    case 'False':
+                        vodResult = false;
+                        break;
+                    default:
+                        vodResult = JSON5.parse(vodResult);
+                        break;
+
+                }
+            }
+            // console.log('hipy logs:', results.slice(0, -1));
+            fastify.log.info(`hipy logs: ${JSON.stringify(results.slice(0, -1))}`);
+            // fastify.log.info(`typeof vodResult: ${typeof vodResult}`);
+            // console.log('vodResult:', vodResult);
+            // 检查是否有错误
+            if (vodResult && vodResult.error) {
+                throw new Error(`Python错误: ${vodResult.error}\n${vodResult.traceback}`);
+            }
+
+            return vodResult; // 返回最后1个结果集
+        } catch (error) {
+            console.error('error:', error);
+            if (error instanceof PythonShellError) {
+                // 尝试解析Python的错误输出
+                try {
+                    const errorData = JSON.parse(error.message);
+                    throw new Error(`Python错误: ${errorData.error}\n${errorData.traceback}`);
+                } catch (e) {
+                    throw new Error(`Python执行错误: ${error.message}`);
+                }
+            }
+            throw error;
+        }
+    };
+
+    // 定义Spider类的方法
+    const spiderMethods = [
+        'init', 'home', 'homeVod', 'homeContent', 'category',
+        'detail', 'search', 'play', 'proxy', 'action', 'initEnv'
+    ];
+
+    // 为代理对象添加方法
+    spiderMethods.forEach(method => {
+        spiderProxy[method] = async (...args) => {
+            return callPythonMethod(method, ...args);
+        };
+    });
+
+    // 处理initEnv调用
+    if (typeof spiderProxy.initEnv === 'function' && env) {
+        await spiderProxy.initEnv(env);
+    }
+
+    return spiderProxy;
+}
+
+const getRule = async function (filePath, env) {
+    const moduleObject = await init(filePath, env);
+    return JSON.stringify(moduleObject);
+}
+
 const init = async function (filePath, env = {}, refresh) {
     try {
+        // console.log('execute init');
         const fileContent = await readFile(filePath, 'utf-8');
         const fileHash = computeHash(fileContent);
+        const moduleName = path.basename(filePath, '.js');
         let moduleExt = env.ext || '';
+        const default_init_cfg = {
+            stype: 4, //T3/T4 源类型
+            skey: `hipy_${moduleName}`,
+            sourceKey: `hipy_${moduleName}`,
+            ext: moduleExt,
+        };
+        let SitesMap = getSitesMap(_config_path);
+        if (moduleExt && SitesMap[moduleName]) {
+            try {
+                moduleExt = ungzip(moduleExt);
+            } catch (e) {
+                log(`[${moduleName}] ungzip解密moduleExt失败: ${e.message}`);
+            }
+            if (!SitesMap[moduleName].find(i => i.queryStr === moduleExt) && !SitesMap[moduleName].find(i => i.queryObject.params === moduleExt)) {
+                throw new Error("moduleExt is wrong!")
+            }
+        }
         let hashMd5 = md5(filePath + '#pAq#' + moduleExt);
         if (moduleCache.has(hashMd5) && !refresh) {
             const cached = moduleCache.get(hashMd5);
-            if (cached.hash === fileHash) {
+            // 除hash外还必须保证proxyUrl实时相等，避免本地代理url的尴尬情况
+            if (cached.hash === fileHash && cached.proxyUrl === env.proxyUrl) {
                 return cached.moduleObject;
             }
         }
         log(`Loading module: ${filePath}`);
-        let rule = {};
-        await rule.init(moduleExt || {});
+        let t1 = getNowTime();
+        let module;
+        module = await loadEsmWithHash(filePath, fileHash, env);
+        // console.log('module:', module);
+        const rule = module;
+        await rule.init(default_init_cfg);
+        let t2 = getNowTime();
         const moduleObject = deepCopy(rule);
-        moduleCache.set(hashMd5, {moduleObject, hash: fileHash});
+        moduleObject.cost = t2 - t1;
+        moduleCache.set(hashMd5, {moduleObject, hash: fileHash, proxyUrl: env.proxyUrl});
         return moduleObject;
     } catch (error) {
         console.log(`Error in hipy.init :${filePath}`, error);
@@ -50,11 +181,12 @@ const home = async function (filePath, env, filter = 1) {
 
 const homeVod = async function (filePath, env) {
     const moduleObject = await init(filePath, env);
-    return json2Object(await moduleObject.homeVod());
+    const homeVodResult = json2Object(await moduleObject.homeVod());
+    return homeVodResult && homeVodResult.list ? homeVodResult.list : homeVodResult;
 }
 
 
-const cate = async function (filePath, env, tid, pg = 1, filter = 1, extend = {}) {
+const category = async function (filePath, env, tid, pg = 1, filter = 1, extend = {}) {
     const moduleObject = await init(filePath, env);
     return json2Object(await moduleObject.category(tid, pg, filter, extend));
 }
@@ -91,7 +223,7 @@ export default {
     init,
     home,
     homeVod,
-    cate,
+    category,
     detail,
     search,
     play,

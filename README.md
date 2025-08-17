@@ -9,6 +9,7 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [本地配置接口-动态本地](/config?pwd=$pwd)
 * [本地配置接口-动态外网/局域网](/config/1?pwd=$pwd)
 * [其他配置接口-订阅过滤](/docs/sub.md)
+* [python环境](/docs/pyenv.md)
 * [猫源调试教程](/docs/catDebug.md)
 * [代码加解密工具](/admin/encoder)
 * [V我50支付凭证生成器](/authcoder?len=10&number=1)
@@ -23,6 +24,10 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [在线猫ds源主页](/cat/index.html)
 
 ## 更新记录
+
+### 20250817
+
+更新至V1.2.13
 
 ### 20250815
 

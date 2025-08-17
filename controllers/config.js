@@ -312,21 +312,24 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     }
 
     // 根据用户是否启用py源去生成对应配置
-    if (ENV.get('enable_py', '1') === '1') {
+    const enable_py = ENV.get('enable_py', '1');
+    if (enable_py === '1' || enable_py === '2') {
         const py_files = readdirSync(pyDir);
-        let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_')); // 筛选出不是 "_" 开头的 .py 文件
+        const api_type = enable_py === '1' ? 3 : 4;
+        let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_') && !file.startsWith('base_')); // 筛选出不是 "_" 开头的 .py 文件
         // log(py_valid_files);
-        log(`开始生成python的t3配置，pyDir:${pyDir},源数量: ${py_valid_files.length}`);
+        log(`开始生成python的T${api_type}配置，pyDir:${pyDir},源数量: ${py_valid_files.length}`);
 
         const py_tasks = py_valid_files.map((file) => {
             return {
                 func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
                     const baseName = path.basename(file, '.py'); // 去掉文件扩展名
                     const extJson = path.join(pyDir, baseName + '.json');
-                    let api = `${requestHost}/py/${file}`;
+                    let api = enable_py === '1' ? `${requestHost}/py/${file}` : `${requestHost}/api/${baseName}?do=py`;  // 使用请求的 host 地址，避免硬编码端口
                     let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
                     if (pwd) {
-                        api += `?pwd=${pwd}`;
+                        api += api_type === 3 ? '?' : '&';
+                        api += `pwd=${pwd}`;
                         if (ext) {
                             ext += `?pwd=${pwd}`;
                         }
@@ -381,7 +384,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         const site = {
                             key: fileSite.key,
                             name: fileSite.name,
-                            type: 3, // 固定值
+                            type: api_type, // 固定值
                             api,
                             ...ruleMeta,
                             ext: fileSite.ext || "", // 固定为空字符串

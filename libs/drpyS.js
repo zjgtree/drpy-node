@@ -1329,7 +1329,7 @@ export async function homeVod(filePath, env) {
     });
 }
 
-export async function cate(filePath, env, tid, pg = 1, filter = 1, extend = {}) {
+export async function category(filePath, env, tid, pg = 1, filter = 1, extend = {}) {
     return await invokeMethod(filePath, env, '一级', [tid, pg, filter, extend], {
         input: '$.url',
         MY_URL: '$.url'
