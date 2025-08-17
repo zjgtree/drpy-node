@@ -32,7 +32,7 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
     const bridgePath = path.join(_lib_path, '_bridge.py'); // 桥接脚本路径
 
     // 创建方法调用函数
-    const callPythonMethod = async (methodName, ...args) => {
+    const callPythonMethod = async (methodName, env, ...args) => {
 
         const options = {
             mode: 'text',     // 使用JSON模式自动解析
@@ -49,7 +49,7 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
         try {
             const results = await PythonShell.run(bridgePath, {
                 ...options,
-                args: [filePath, methodName, ...jsonArgs]
+                args: [filePath, methodName, JSON.stringify(env), ...jsonArgs]
             });
             // 取最后一条返回
             let vodResult = results.slice(-1)[0];
@@ -107,7 +107,7 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
     // 为代理对象添加方法
     spiderMethods.forEach(method => {
         spiderProxy[method] = async (...args) => {
-            return callPythonMethod(method, ...args);
+            return callPythonMethod(method, env, ...args);
         };
     });
 
@@ -126,7 +126,6 @@ const getRule = async function (filePath, env) {
 
 const init = async function (filePath, env = {}, refresh) {
     try {
-        // console.log('execute init');
         const fileContent = await readFile(filePath, 'utf-8');
         const fileHash = computeHash(fileContent);
         const moduleName = path.basename(filePath, '.js');
@@ -153,6 +152,7 @@ const init = async function (filePath, env = {}, refresh) {
             const cached = moduleCache.get(hashMd5);
             // 除hash外还必须保证proxyUrl实时相等，避免本地代理url的尴尬情况
             if (cached.hash === fileHash && cached.proxyUrl === env.proxyUrl) {
+                // console.log('cached init');
                 return cached.moduleObject;
             }
         }

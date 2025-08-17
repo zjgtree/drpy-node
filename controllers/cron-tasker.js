@@ -15,6 +15,17 @@ export default (fastify, options, done) => {
     };
 
     const taskRegistry = new Map();
+    const format_task_object = (task) => {
+        return {
+            name: task.name,
+            path: task.path,
+            schedule: task.schedule,
+            lastRun: toBeijingTime(task.lastRun),
+            nextRun: toBeijingTime(task.nextRun),
+            status: task.status,
+            // cronTask: task.cronTask,
+        }
+    };
 
     function getNextRunFromJob(job) {
         try {
@@ -206,7 +217,7 @@ export default (fastify, options, done) => {
             return {
                 message: `Task "${taskName}" executed manually`,
                 status: 'success',
-                task: taskRegistry.get(taskName)
+                task: format_task_object(taskRegistry.get(taskName))
             };
         }
 
@@ -223,14 +234,7 @@ export default (fastify, options, done) => {
     });
 
     fastify.get('/tasks', {preHandler: validateBasicAuth}, async (request, reply) => {
-        const tasks = [...taskRegistry.values()].map(task => ({
-            name: task.name,
-            schedule: task.schedule,
-            status: task.status,
-            lastRun: toBeijingTime(task.lastRun),
-            nextRun: toBeijingTime(task.nextRun),
-            path: task.path
-        }));
+        const tasks = [...taskRegistry.values()].map(task => (format_task_object(task)));
 
         return tasks;
     });
@@ -246,14 +250,7 @@ export default (fastify, options, done) => {
         }
 
         const task = taskRegistry.get(taskName);
-        return {
-            name: task.name,
-            schedule: task.schedule,
-            status: task.status,
-            lastRun: toBeijingTime(task.lastRun),
-            nextRun: toBeijingTime(task.nextRun),
-            path: task.path
-        };
+        return format_task_object(task);
     });
 
     fastify.addHook('onClose', async () => {

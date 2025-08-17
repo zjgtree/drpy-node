@@ -112,6 +112,13 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
     def init_api_ext_file(self):
         pass
 
+    def initEnv(self, env=None):
+        if env is None:
+            env = {}
+        self._ENV = env
+        self.t4_api = env.get('proxyUrl')
+
+
     def getProxyUrl(self):
         """
         获取本地代理地址

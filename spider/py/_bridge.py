@@ -21,8 +21,14 @@ def import_module(module_url):
     return importlib.import_module(module_url)
 
 
-def load_spider(script_path):
+def load_spider(script_path, env):
     """动态加载指定路径的 Python 脚本并实例化 Spider 类"""
+    try:
+        env = json.loads(env)
+    except json.JSONDecodeError:
+        # 保持原始字符串
+        pass
+
     try:
         script_name = os.path.basename(script_path)[:-3]
         print('load_spider:', script_name)
@@ -32,8 +38,9 @@ def load_spider(script_path):
         if not hasattr(module, 'Spider'):
             raise AttributeError(f"Script {script_path} does not contain a 'Spider' class")
 
+        proxyUrl = env.get('proxyUrl') if isinstance(env, dict) else ''
         # 实例化 Spider
-        spider = module.Spider()
+        spider = module.Spider(t4_api=proxyUrl)
         return spider
 
     except Exception as e:
@@ -54,7 +61,7 @@ def t4_spider_init(spider, ext=''):
     module_names = []
     for lib in depends:
         try:
-            module = import_module(lib).Spider()
+            module = import_module(lib).Spider(t4_api=ext)
             modules.append(module)
             module_names.append(lib)
         except Exception as e:
@@ -68,7 +75,7 @@ def t4_spider_init(spider, ext=''):
     return spider, result
 
 
-def call_spider_method(spider, method_name, args):
+def call_spider_method(spider, method_name, env, args):
     """调用 Spider 实例的指定方法"""
     invoke_method_name = method_dict.get(method_name) or method_name
     try:
@@ -87,18 +94,25 @@ def call_spider_method(spider, method_name, args):
             except json.JSONDecodeError:
                 # 保持原始字符串
                 parsed_args.append(arg)
+        try:
+            env = json.loads(env)
+        except json.JSONDecodeError:
+            # 保持原始字符串
+            pass
 
         print(f'parsed_args:{parsed_args}')
 
         if method_name == 'init':
-            extend = parsed_args[0] if parsed_args else ''
+            extend = parsed_args[0] if parsed_args and isinstance(parsed_args, list) else ''
             spider, result = t4_spider_init(spider, extend)
             #             result = spider.init(modules)
             return result
         else:
             if not hasattr(spider, '_init_ok_'):
                 #                 spider,_ = t4_spider_init(spider,*parsed_args) # 需要传extend参数，暂时没有好办法
-                extend = parsed_args[0] if parsed_args else ''
+                #                 extend = parsed_args[0] if parsed_args and isinstance(parsed_args,list)  else ''
+                #                 extend = env.get('ext','')
+                extend = env.get('ext') if isinstance(env, dict) else ''
                 spider, _ = t4_spider_init(spider, extend)
                 method = getattr(spider, invoke_method_name)
             result = method(*parsed_args)
@@ -125,10 +139,11 @@ def main():
         return
     script_path = sys.argv[1]
     method_name = sys.argv[2]
-    args = sys.argv[3:]
+    env = sys.argv[3]
+    args = sys.argv[4:]
     print(f'script_path:{script_path},method_name:{method_name}')
-    spider = load_spider(script_path)
-    result = call_spider_method(spider, method_name, args)
+    spider = load_spider(script_path, env)
+    result = call_spider_method(spider, method_name, env, args)
     print(result)
 
 

@@ -10,6 +10,8 @@
 1. 增加 `hipy` 适配器
 2. 新增依赖 `python-shell` 需要手动安装
 3. 统一libs接口 `cate` 改为 `category`
+4. 修复了 定时任务 `execute-now` 接口返回数据错误
+5. 目前py源的T4支持 ext扩展、getDependence依赖、以及 本地代理 和 动作，凑合能用，代码实现很狗屎。
 
 ### 20250815
 
