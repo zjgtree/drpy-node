@@ -8,6 +8,9 @@
 })
 */
 
+import {_, load} from "assets://js/lib/cat.js"; // 通用，CAT_DEBUG=0|1 都完美
+// import {_, load} from "../catLib/cat.js"; // 这样写在CAT_DEBUG=0模式下不行，在CAT_DEBUG=1没问题
+
 function init(cfg) {
     const ext = cfg.ext;
     console.log('init');
@@ -18,6 +21,7 @@ function qjs_test() {
     if (typeof getProxy === 'function') {
         console.log('getProxy(true):', getProxy(true));
     }
+    console.log(`猫依赖测试：typeof load: ${typeof load},typeof _: ${typeof _}`);
     const t1 = Date.now()
     let str = '';
     for (let i = 0; i < 1000_000; i++) {

@@ -38,7 +38,8 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
 const loadEsmWithEnv = async function (filePath, env) {
     const rawCode = await readFile(filePath, 'utf8');
     let injectedCode = rawCode;
-    // let injectedCode = rawCode.replaceAll('assets://js/lib/', '../catLib/'); // esm-rregister处理了，这里不管
+    // 不用管这里,CAT_DEBUG=0的时候走这个逻辑也是会被esm-register处理
+    // let injectedCode = rawCode.replaceAll('assets://js/lib/', '../catLib/'); // esm-register处理了，这里不管
     // console.log('loadEsmWithEnv:', env);
     const esm_flag1 = 'export function __jsEvalReturn';
     const esm_flag2 = 'export default';

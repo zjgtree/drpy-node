@@ -9,13 +9,17 @@ const assets_path = path.join(__dirname, '../spider/catvod');
 export async function load(url, context, nextLoad) {
     // console.log('load esm form:', url);
     if (url.startsWith('assets://js/lib/')) {
-        url = url.replaceAll('assets://js/lib/', '../catLib/');
-        const catLibJsPath = path.join(assets_path, '../catLib', 'crypto-js.js');
-        // console.log('catLibJsPath:', catLibJsPath);
+        const relativeUrl = url.replaceAll('assets://js/lib/', '../catLib/');
+        const catLibJsPath = path.join(assets_path, relativeUrl);
         const catLibHref = pathToFileURL(catLibJsPath).href;
-        console.log('catLibHref:', catLibHref);
+        console.log(`[assets url]: ${url} [relativeUrl]:${relativeUrl}\n[catLibJsPath]: ${catLibJsPath} [catLibHref]:${catLibHref}`);
         url = catLibHref;
     }
+    // 解决不了CAT_DEBUG=0模式下的相对路径依赖问题
+    // else if(url.startsWith('.') && url.includes('/catLib/')) {
+    //     const catLibJsPath = path.join(assets_path, url);
+    //     url = pathToFileURL(catLibJsPath).href;
+    // }
     // 只处理目标模块
     if (url.includes('/spider/catvod')) {
         // 正常加载模块
