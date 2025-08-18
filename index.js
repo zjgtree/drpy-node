@@ -8,6 +8,8 @@ import formBody from '@fastify/formbody';
 import {validateBasicAuth, validateJs, validatePwd} from "./utils/api_validate.js";
 // 注册自定义import钩子
 import './utils/esm-register.mjs';
+// 引入python守护进程
+import {daemon} from "./utils/daemonManager.js";
 // 注册控制器
 import {registerRoutes} from './controllers/index.js';
 
@@ -71,6 +73,26 @@ fastify.register(fastifyStatic, {
 
 // 注册插件以支持 application/x-www-form-urlencoded
 fastify.register(formBody);
+
+fastify.addHook('onReady', async () => {
+    try {
+        await daemon.startDaemon();
+        fastify.log.info('Python守护进程已启动');
+    } catch (error) {
+        fastify.log.error(`启动Python守护进程失败: ${error.message}`);
+        fastify.log.error('Python相关功能将不可用');
+    }
+});
+
+// 停止时清理守护进程
+fastify.addHook('onClose', async () => {
+    try {
+        await daemon.stopDaemon();
+        fastify.log.info('Python守护进程已停止');
+    } catch (error) {
+        fastify.log.error(`停止Python守护进程失败: ${error.message}`);
+    }
+});
 
 // 给静态目录插件中心挂载basic验证
 fastify.addHook('preHandler', (req, reply, done) => {

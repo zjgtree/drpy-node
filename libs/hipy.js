@@ -6,6 +6,7 @@ import {fileURLToPath} from 'url';
 import {md5} from "../libs_drpy/crypto-util.js";
 import {PythonShell, PythonShellError} from 'python-shell';
 import {fastify} from "../controllers/fastlogger.js";
+import {daemon} from "../utils/daemonManager.js";
 
 // 缓存已初始化的模块和文件 hash 值
 const moduleCache = new Map();
@@ -32,7 +33,7 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
     const bridgePath = path.join(_lib_path, '_bridge.py'); // 桥接脚本路径
 
     // 创建方法调用函数
-    const callPythonMethod = async (methodName, env, ...args) => {
+    const callPythonMethodOld = async (methodName, env, ...args) => {
 
         const options = {
             mode: 'text',     // 使用JSON模式自动解析
@@ -98,6 +99,69 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
         }
     };
 
+    const callPythonMethod = async (methodName, env, ...args) => {
+        const config = daemon.getDaemonConfig();
+        const command = [
+            `"${daemon.getPythonPath()}"`,
+            `"${config.clientScript}"`,
+            `--script-path "${filePath}"`,
+            `--method-name "${methodName}"`,
+            `--env '${JSON.stringify(env)}'`,
+            ...args.map(arg => `--arg '${JSON.stringify(arg)}'`)
+        ].join(' ');
+        // console.log(command);
+        const cmd_args = [];
+        args.forEach(arg => {
+            cmd_args.push(`--arg`);
+            cmd_args.push(`${JSON.stringify(arg)}`);
+        });
+        const options = {
+            mode: 'text',
+            pythonPath: daemon.getPythonPath(),
+            pythonOptions: ['-u'], // 无缓冲输出
+            env: {
+                "PYTHONIOENCODING": 'utf-8',
+            },
+            args: [
+                '--script-path', filePath,
+                '--method-name', methodName,
+                '--env', JSON.stringify(env),
+                ...cmd_args
+            ]
+        };
+        const results = await PythonShell.run(config.clientScript, {
+            ...options,
+        });
+        // 取最后一条返回
+        const stdout = results.slice(-1)[0];
+        fastify.log.info(`hipy logs: ${JSON.stringify(results.slice(0, -1))}`);
+        // console.log(`hipy logs: ${JSON.stringify(results.slice(0, -1))}`);
+        let vodResult = {};
+        if (typeof stdout === 'string' && stdout) {
+            switch (stdout) {
+                case 'None':
+                    vodResult = null;
+                    break;
+                case 'True':
+                    vodResult = true;
+                    break;
+                case 'False':
+                    vodResult = false;
+                    break;
+                default:
+                    vodResult = JSON5.parse(stdout);
+                    break;
+            }
+        }
+        // console.log(typeof vodResult);
+        // 检查是否有错误
+        if (vodResult && vodResult.error) {
+            throw new Error(`Python错误: ${vodResult.error}\n${vodResult.traceback}`);
+        }
+        // console.log(vodResult);
+        return vodResult.result;
+    }
+
     // 定义Spider类的方法
     const spiderMethods = [
         'init', 'home', 'homeVod', 'homeContent', 'category',
@@ -162,12 +226,13 @@ const init = async function (filePath, env = {}, refresh) {
         module = await loadEsmWithHash(filePath, fileHash, env);
         // console.log('module:', module);
         const rule = module;
-        await rule.init(default_init_cfg);
+        const initValue = await rule.init(default_init_cfg) || {};
         let t2 = getNowTime();
         const moduleObject = deepCopy(rule);
         moduleObject.cost = t2 - t1;
         moduleCache.set(hashMd5, {moduleObject, hash: fileHash, proxyUrl: env.proxyUrl});
-        return moduleObject;
+        // return moduleObject;
+        return {...moduleObject, ...initValue};
     } catch (error) {
         console.log(`Error in hipy.init :${filePath}`, error);
         throw new Error(`Failed to initialize module:${error.message}`);
