@@ -9,10 +9,13 @@ import {fileURLToPath} from "url";
 const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '../');
+const hasWriteAccess = !process.env.VERCEL; // 非vercel环境才有write权限
 
 function ensureDir(dir) {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, {recursive: true});
+    if (hasWriteAccess) {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {recursive: true});
+        }
     }
 }
 
@@ -67,9 +70,11 @@ export class DaemonManager {
     }
 
     cleanupFiles() {
-        try {
-            if (fs.existsSync(this.config.pidFile)) fs.unlinkSync(this.config.pidFile);
-        } catch {
+        if (hasWriteAccess) {
+            try {
+                if (fs.existsSync(this.config.pidFile)) fs.unlinkSync(this.config.pidFile);
+            } catch {
+            }
         }
     }
 
@@ -142,7 +147,9 @@ export class DaemonManager {
         });
 
         daemonShell.childProcess.on('spawn', () => {
-            fs.writeFileSync(this.config.pidFile, daemonShell.childProcess.pid.toString());
+            if (hasWriteAccess) {
+                fs.writeFileSync(this.config.pidFile, daemonShell.childProcess.pid.toString());
+            }
             log(this.config.logFile, 'INFO', `守护进程启动成功，PID: ${daemonShell.childProcess.pid}`);
         });
 

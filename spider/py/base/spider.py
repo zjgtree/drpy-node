@@ -118,7 +118,6 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
         self._ENV = env
         self.t4_api = env.get('proxyUrl')
 
-
     def getProxyUrl(self):
         """
         获取本地代理地址
@@ -147,12 +146,12 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
         return src
 
     def custom_RegexGetText(self, Text, RegexText, Index, find_all=False):
-                """改进版：支持返回所有匹配结果或单个匹配"""
-                if not find_all:
-                    match = re.search(RegexText, Text, re.M | re.S)
-                    return match.group(Index) if match else ""
-                else:
-                    return [m.group(Index) for m in re.finditer(RegexText, Text, re.M | re.S)]
+        """改进版：支持返回所有匹配结果或单个匹配"""
+        if not find_all:
+            match = re.search(RegexText, Text, re.M | re.S)
+            return match.group(Index) if match else ""
+        else:
+            return [m.group(Index) for m in re.finditer(RegexText, Text, re.M | re.S)]
 
     # cGroup = re.compile('[\U00010000-\U0010ffff]')
     # clean = cGroup.sub('',rsp.text)
@@ -161,34 +160,38 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
                        src)
         return clean
 
-    def fetch(self, url, data=None, headers={}, cookies="", timeout=5):
-        if data is None:
-            data = {}
-        rsp = requests.get(url, params=data, headers=headers, cookies=cookies, timeout=timeout, verify=False)
+    def fetch(self, url, params=None, headers=None, cookies=None, timeout=5, verify=True, allow_redirects=True):
+        rsp = requests.get(url, params=params, headers=headers, cookies=cookies, timeout=timeout, verify=verify,
+                           allow_redirects=allow_redirects)
         rsp.encoding = 'utf-8'
         return rsp
 
-    def post(self, url, data, headers={}, cookies={}, timeout=5):
-        rsp = requests.post(url, data=data, headers=headers, cookies=cookies, timeout=timeout, verify=False)
+    def post(self, url, data, headers=None, cookies=None, timeout=5, verify=True, allow_redirects=True):
+        rsp = requests.post(url, data=data, headers=headers, cookies=cookies, timeout=timeout, verify=verify,
+                            allow_redirects=allow_redirects)
         rsp.encoding = 'utf-8'
         return rsp
 
-    def postJson(self, url, json, headers={}, cookies={}, timeout=5):
-        rsp = requests.post(url, json=json, headers=headers, cookies=cookies, timeout=timeout, verify=False)
+    def postJson(self, url, json, headers=None, cookies=None, timeout=5, verify=True, allow_redirects=True):
+        rsp = requests.post(url, json=json, headers=headers, cookies=cookies, timeout=timeout, verify=verify,
+                            allow_redirects=allow_redirects)
         rsp.encoding = 'utf-8'
         return rsp
 
-    def postBinary(self, url, data: dict, boundary=None, headers={}, cookies={}, timeout=5):
+    def postBinary(self, url, data: dict, boundary=None, headers=None, cookies=None, timeout=5, verify=True,
+                   allow_redirects=True):
         if boundary is None:
             boundary = f'--dio-boundary-{int(time.time())}'
+        if headers is None:
+            headers = {}
         headers['Content-Type'] = f'multipart/form-data; boundary={boundary}'
-        # print(headers)
         fields = []
         for key, value in data.items():
             fields.append((key, (None, value, None)))
         m = encode_multipart_formdata(fields, boundary=boundary)
         data = m[0]
-        rsp = requests.post(url, data=data, headers=headers, cookies=cookies, timeout=timeout, verify=False)
+        rsp = requests.post(url, data=data, headers=headers, cookies=cookies, timeout=timeout, verify=verify,
+                            allow_redirects=allow_redirects)
         rsp.encoding = 'utf-8'
         return rsp
 

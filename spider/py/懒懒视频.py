@@ -8,14 +8,17 @@
 })
 """
 
-import sys,time,uuid,json,urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-sys.path.append('..')
+# -*- coding: utf-8 -*-
+# 本资源来源于互联网公开渠道，仅可用于个人学习爬虫技术。
+# 严禁将其用于任何商业用途，下载后请于 24 小时内删除，搜索结果均来自源站，本人不承担任何责任。
+
 try:
-    # from base.spider import Spider as BaseSpider
     from base.spider import BaseSpider
 except ImportError:
     from t4.base.spider import BaseSpider
+import sys,time,uuid,json,urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+sys.path.append('..')
 
 class Spider(BaseSpider):
     device_id,cms_host,parses = '','',{}
@@ -45,7 +48,7 @@ class Spider(BaseSpider):
 
     def init(self, extend=''):
         try:
-            config = json.loads(extend)
+            config = json.loads(self.extend)
         except (json.JSONDecodeError, TypeError):
             config = {}
         host = config.get('host', 'http://llsp2.洛阳it商城.com').rstrip('/')
@@ -105,22 +108,23 @@ class Spider(BaseSpider):
         return {'list': [data]}
 
     def playerContent(self, flag, id, vipflags):
-        def_header = {'User-Agent': ' Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/929.36 (KHTML, like Gecko) Chrome/86.0.3347.284 Safari/709.36'}
-        jx,url = 0,''
+        header = {
+            'User-Agent': ' Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/929.36 (KHTML, like Gecko) Chrome/86.0.3347.284 Safari/709.36'}
+        jx, url = 0, ''
         play_from, raw_url = id.split('@')
-        parses = self.parses.get(play_from,[])
+        parses = self.parses.get(play_from, [])
         for i in parses:
             try:
-                data = self.fetch(f'{i}{raw_url}',headers=self.headers2, verify=False).json()
-                data =  data['data']
+                data = self.fetch(f'{i}{raw_url}', headers=self.headers2, verify=False).json()
+                data = data['data']
                 play_url = data['url']
                 if play_url.startswith('http'):
                     url = play_url
-                    header = data.get('header',def_header)
+                    header = data.get('header', header)
                     break
             except Exception:
                 continue
-        return { 'jx': jx, 'parse': '0', 'url': url, 'header': def_header}
+        return {'jx': jx, 'parse': '0', 'url': url, 'header': header}
 
     def timestamp(self):
         return str(int(time.time() * 1000))

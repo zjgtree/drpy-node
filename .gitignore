@@ -138,6 +138,7 @@ dist
 /spider/js/百忙无果[官].js
 /data/settings/link_data.json
 /yarn.lock
+/t4_daemon.pid
 /custom.json
 /index.json
 /vod_cache/
