@@ -138,7 +138,7 @@ export class DaemonManager {
         this.daemonShell = daemonShell;
 
         daemonShell.on('message', (m) => log(this.config.logFile, 'INFO', `[守护进程] ${m}`));
-        daemonShell.on('stderr', (m) => log(this.config.logFile, 'ERROR', `[stderr] ${m}`));
+        daemonShell.on('stderr', (m) => log(this.config.logFile, 'INFO', `[stderr] ${m}`));
         daemonShell.on('error', (err) => log(this.config.logFile, 'CRITICAL', `错误: ${err.message}`));
         daemonShell.on('close', (code) => {
             log(this.config.logFile, 'INFO', `守护进程退出，代码: ${code}`);

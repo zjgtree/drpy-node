@@ -1,4 +1,3 @@
-import fastifyStatic from '@fastify/static';
 import * as fastlogger from './controllers/fastlogger.js'
 import path from 'path';
 import os from 'os';
@@ -19,61 +18,25 @@ const {fastify} = fastlogger;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 5757;
 const MAX_TEXT_SIZE = 0.1 * 1024 * 1024; // 设置最大文本大小为 0.1 MB
+// 定义options的目录
+const docsDir = path.join(__dirname, 'docs');
+const jxDir = path.join(__dirname, 'jx');
+const publicDir = path.join(__dirname, 'public');
+const appsDir = path.join(__dirname, 'apps');
 const jsonDir = path.join(__dirname, 'json');
 const jsDir = path.join(__dirname, 'spider/js');
 const dr2Dir = path.join(__dirname, 'spider/js_dr2');
 const pyDir = path.join(__dirname, 'spider/py');
 const catDir = path.join(__dirname, 'spider/catvod');
+const catLibDir = path.join(__dirname, 'spider/catLib');
 const xbpqDir = path.join(__dirname, 'spider/xbpq');
-
-// 静态资源
-fastify.register(fastifyStatic, {
-    root: path.join(__dirname, 'public'),
-    prefix: '/public/',
-});
-
-fastify.register(fastifyStatic, {
-    root: path.join(__dirname, 'apps'),
-    prefix: '/apps/', // 新的访问路径前缀
-    decorateReply: false, // 禁用 sendFile
-});
-
-fastify.register(fastifyStatic, {
-    root: jsonDir,
-    prefix: '/json/', // 新的访问路径前缀
-    decorateReply: false, // 禁用 sendFile
-});
-
-fastify.register(fastifyStatic, {
-    root: dr2Dir,
-    prefix: '/js/', // 新的访问路径前缀
-    decorateReply: false, // 禁用 sendFile
-    // setHeaders: (res, path) => {
-    //     res.setHeader('Cache-Control', 'no-store'); // 禁用缓存确保每次获取最新
-    // }
-});
-
-fastify.register(fastifyStatic, {
-    root: pyDir,
-    prefix: '/py/', // 新的访问路径前缀
-    decorateReply: false, // 禁用 sendFile
-    setHeaders: (res, path) => {
-        // 自定义 .py 文件的 Content-Type
-        if (path.endsWith('.py')) {
-            res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-        }
-    }
-});
-
-fastify.register(fastifyStatic, {
-    root: catDir,
-    prefix: '/cat/', // 新的访问路径前缀
-    decorateReply: false, // 禁用 sendFile
-});
+const viewsDir = path.join(__dirname, 'views');
+const configDir = path.join(__dirname, 'config');
 
 // 注册插件以支持 application/x-www-form-urlencoded
 fastify.register(formBody);
 
+// 添加钩子事件
 fastify.addHook('onReady', async () => {
     try {
         await daemon.startDaemon();
@@ -124,25 +87,6 @@ fastify.addHook('onRequest', async (req, reply) => {
     // 如果需要，可以在这里对 req.query 进行进一步处理
 });
 
-registerRoutes(fastify, {
-    rootDir: __dirname,
-    docsDir: path.join(__dirname, 'docs'),
-    jxDir: path.join(__dirname, 'jx'),
-    jsonDir: jsonDir,
-    jsDir: jsDir,
-    dr2Dir: dr2Dir,
-    pyDir: pyDir,
-    catDir: catDir,
-    xbpqDir: xbpqDir,
-    viewsDir: path.join(__dirname, 'views'),
-    configDir: path.join(__dirname, 'config'),
-    PORT,
-    MAX_TEXT_SIZE,
-    indexFilePath: path.join(__dirname, 'index.json'),
-    customFilePath: path.join(__dirname, 'custom.json'),
-    subFilePath: path.join(__dirname, 'public/sub/sub.json'),
-});
-
 process.on('unhandledRejection', (err) => {
     fastify.log.error(`未处理的Promise拒绝:${err.message}`);
     console.log(`发生了致命的错误，已阻止进程崩溃。${err.stack}`);
@@ -150,6 +94,67 @@ process.on('unhandledRejection', (err) => {
     // 清理后退出进程（避免程序处于未知状态）
     // process.exit(1);
 });
+
+// 统一退出处理函数
+const handleExit = async (signal) => {
+    try {
+        console.log(`\nReceived ${signal}, closing server...`);
+        // Fastify 提供的关闭方法，内部会触发 onClose 钩子
+        await fastify.close();
+        console.log('Fastify closed successfully');
+        process.exit(0);
+    } catch (err) {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+    }
+};
+
+// 捕获常见退出信号（Linux 上 pm2 stop 会发 SIGINT 或 SIGTERM）
+['SIGINT', 'SIGTERM'].forEach((sig) => {
+    process.on(sig, () => handleExit(sig));
+});
+
+// Windows 上的兼容处理：捕获 Ctrl+C
+if (process.platform === 'win32') {
+    const rl = (await import('readline')).createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    rl.on('SIGINT', () => {
+        handleExit('SIGINT');
+    });
+}
+
+// 捕获 Node.js 主动退出（比如 pm2 stop 也会触发 exit）
+process.on('exit', async (code) => {
+    console.log(`Process exiting with code: ${code}`);
+    // 这里不能直接用 await fastify.close()（Node 在 exit 里不等异步）
+    // 但 Fastify 的 SIGINT/SIGTERM 会提前触发，所以这里只记录日志
+});
+
+registerRoutes(fastify, {
+    rootDir: __dirname,
+    docsDir,
+    jxDir,
+    publicDir,
+    appsDir,
+    jsonDir,
+    jsDir,
+    dr2Dir,
+    pyDir,
+    catDir,
+    catLibDir,
+    xbpqDir,
+    PORT,
+    MAX_TEXT_SIZE,
+    viewsDir,
+    configDir,
+    indexFilePath: path.join(__dirname, 'index.json'),
+    customFilePath: path.join(__dirname, 'custom.json'),
+    subFilePath: path.join(__dirname, 'public/sub/sub.json'),
+});
+
 
 // 启动服务
 const start = async () => {

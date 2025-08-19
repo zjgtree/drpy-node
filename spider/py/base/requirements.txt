@@ -4,4 +4,5 @@ pycryptodome
 ujson
 pyquery
 jsonpath
+json5
 jpype1

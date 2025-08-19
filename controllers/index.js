@@ -1,3 +1,4 @@
+import staticController from './static.js';
 import docsController from './docs.js';
 import configController from './config.js';
 import apiController from './api.js';
@@ -12,6 +13,7 @@ import httpController from './http.js';
 import cronTaskerController from './cron-tasker.js';
 
 export const registerRoutes = (fastify, options) => {
+    fastify.register(staticController, options);
     fastify.register(docsController, options);
     fastify.register(configController, options);
     fastify.register(apiController, options);
