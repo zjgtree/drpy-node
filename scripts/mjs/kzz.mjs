@@ -45,7 +45,7 @@ async function main() {
         const kzzData = await getNowKzz(
             `test_7`,
             'http://data.eastmoney.com/kzz/',
-            -7
+            7
         );
         console.log(kzzData);
         console.log('程序执行完成');

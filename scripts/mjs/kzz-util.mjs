@@ -179,10 +179,13 @@ function processKzzData(data, dayeExtra) {
         }
 
         const dateStr = publicDate.format('YYYY-MM-DD');
+        const dateStrNow = dayjs().format('YYYY-MM-DD');
+        // console.log(dateStr, targetDateStr, dateStrNow);
 
         // 检查是否匹配目标日期
         // if (dateStr === targetDateStr) {
-        if (compareDates(dateStr, targetDateStr) >= 0) {
+        if (compareDates(dateStr, targetDateStr) >= 0 || compareDates(dateStr, dateStrNow) >= 0) {
+            // console.log('成功匹配:', dateStr, targetDateStr, dateStrNow);
             kzzList.push({
                 name: item.SECURITY_NAME_ABBR,
                 code: item.SECURITY_CODE,
