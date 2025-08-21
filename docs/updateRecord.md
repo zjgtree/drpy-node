@@ -8,6 +8,7 @@
 2. 增加 `live2cms.json` 增加一条本代线路
 3. 猫源解析引擎默认 0 和 1 都视为url模式，以前base64模式有Bug调整 `CAT_DEBUG=2` 开启
 4. 完善hipy源和cat源的map传参机制，map里传参分发源，不用手写配置文件的ext
+5. 修复 `猫爪` 软件不支持 源的ext为object对象的问题
 
 已知bug(待壳子适配):
 
