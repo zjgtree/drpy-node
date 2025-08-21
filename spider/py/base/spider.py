@@ -678,3 +678,6 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
             return localdict
         except Exception as e:
             return {'error': f'执行报错:{e}'}
+
+
+Spider = BaseSpider

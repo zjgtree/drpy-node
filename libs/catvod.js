@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/catvod');
-const enable_cat_debug = Number(process.env.CAT_DEBUG) || 0;
+const enable_cat_debug = Number(process.env.CAT_DEBUG) !== 2;
 
 console.log('enable_cat_debug:', enable_cat_debug);
 

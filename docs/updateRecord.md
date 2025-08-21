@@ -1,5 +1,19 @@
 # drpyS更新记录
 
+### 20250821
+
+更新至V1.2.16
+
+1. 增加一堆 `hipy` 源
+2. 增加 `live2cms.json` 增加一条本代线路
+3. 猫源解析引擎默认 0 和 1 都视为url模式，以前base64模式有Bug调整 `CAT_DEBUG=2` 开启
+4. 完善hipy源和cat源的map传参机制，map里传参分发源，不用手写配置文件的ext
+
+已知bug(待壳子适配):
+
+1. 宝盒不支持ext直接传链接，即使是外网它也会去访问ext然后把源码丢给后续请求导致不正确(drpyHiker和装逼壳子正常)
+2. drpyHiker不支持ext传递object类型，json层面没有进行object转json操作，导致后续接口请求用的 [object Object]
+
 ### 20250819
 
 更新至V1.2.15

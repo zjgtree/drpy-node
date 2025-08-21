@@ -12,3 +12,9 @@
 UC分享@?type=url&params=../json/UC分享.json@UC分享[盘]
 16wMV[听]@?type=url&params=../json/十六万歌曲.txt
 点歌欢唱[B]@?type=url&params=../json/十六万歌曲.txt
+Appfox@http://app.hktvyb.cc@TVB云播|APP
+Appfox@{"host":"http://45.192.110.211:1513","parse":{"qq|qiyi|mgtv|youku|bilibili":"https://api.qljson.xyz/api/?key=67f6a108dc6d84eaf81ac58417c1f72a&url="}}@魔方影视|APP
+Appfox@{"host":"https://cunchu8.obs.cn-north-4.myhuaweicloud.com/config.json","parse":{"JL4K":"http://194.147.100.155:7891/?url="}}@火猫影视|APP
+Appfox@{"host":"http://kumiao.yzbao.com.cn","parse":{"qq|qiyi|mgtv|youku|bilibili":"https://api.qljson.xyz/api/?key=67f6a108dc6d84eaf81ac58417c1f72a&url="}}@未来影视|APP
+getapp3.4.1@{"host":"https://appcms.xy4k.com","datakey":"7SDWjknU34zqFbVr"}@小羊4k
+getapp3.4.1@{"host":"https://jingyu4k-1312635929.cos.ap-nanjing.myqcloud.com/1.json","datakey":"AAdgrdghjfgswerA","api":2}@鲸鱼影视

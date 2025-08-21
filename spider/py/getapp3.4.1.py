@@ -39,7 +39,7 @@ class Spider(BaseSpider):
         return "首页"
 
     def init(self, extend):
-        js1=json.loads(extend)
+        js1=json.loads(self.extend)
         host = js1['host']
         if not re.match(r'^https?:\/\/[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:\d+)?(\/)?$',host):
             host = self.fetch(host, headers=self.headerx, timeout=10, verify=False).text.rstrip('/')

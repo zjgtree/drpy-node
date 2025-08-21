@@ -368,10 +368,16 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         let name = `${ruleMeta.title}(hipy)`;
                         fileSites.push({key, name, ext});
                     } else if (SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                        // console.log(SitesMap[baseName]);
                         SitesMap[baseName].forEach((it) => {
                             let key = `hipy_py_${it.alias}`;
                             let name = `${it.alias}(hipy)`;
-                            let _ext = updateQueryString(ext, it.queryStr);
+                            let _ext = it.queryStr;
+                            try {
+                                _ext = JSON.parse(_ext);
+                            } catch (err) {
+                            }
+                            console.log(`[HIPY-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${_ext}`);
                             fileSites.push({key, name, ext: _ext});
                         });
                     } else {
@@ -461,7 +467,13 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         SitesMap[baseName].forEach((it) => {
                             let key = `catvod_${it.alias}`;
                             let name = `${it.alias}(cat)`;
-                            let _ext = updateQueryString(ext, it.queryStr);
+                            let _ext = it.queryStr;
+
+                            try {
+                                _ext = JSON.parse(_ext);
+                            } catch (err) {
+                            }
+                            console.log(`[CAT-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${_ext}`);
                             fileSites.push({key, name, ext: _ext});
                         });
                     } else {
