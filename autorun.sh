@@ -9,11 +9,27 @@ PH='\033[35m'
 QS='\033[36m'
 NC='\033[0m' # No Color
 
-echo -e "${PH}警告：此脚本只适用于Debian系列系统（包含Ubuntu），因为需要使用apt来安装软件。${NC}"
-echo -e "${PH}警告：此脚本只适用于Debian系列系统（包含Ubuntu），因为需要使用apt来安装软件。${NC}"
-echo -e "${PH}警告：此脚本只适用于Debian系列系统（包含Ubuntu），因为需要使用apt来安装软件。${NC}"
-echo -e "${YELLOW}警告：如果是群晖NAS自行安装node套件后同样可以使用脚本进行更新使用！！！${NC}"
-echo -e "${GREEN}警告：脚本自动更新需要自行添加任务计划设定运行时间！！！${NC}"
+# 检查当前用户是否为root用户
+if [ "$(id -u)" -ne 0 ]; then
+    echo -e "${RED}错误：此脚本需要以root用户身份运行。${NC}"
+    exit 1
+fi
+
+# 确认提示
+echo -e "${PH}======================================================================${NC}"
+echo -e "${PH}  警告：此脚本只适用于群晖、Debian系列系统（包含Ubuntu、Fnos）。${NC}"
+echo -e "${YELLOW}  警告：群晖NAS自行安装node套件后使用！！！${NC}"
+echo -e "${GREEN}  警告：脚本自动更新需要自行添加任务计划设定运行时间！！！${NC}"
+echo -e "${PH}======================================================================${NC}"
+echo -ne "${PH}您是否理解并同意继续？(y/n) 默认10秒后确认(y): ${NC}"
+read -t 10 confirm
+confirm=${confirm:-"y"}
+if [[ "$confirm" != "y" ]]; then
+    echo -e "${RED}用户取消操作。${NC}"
+    exit 1
+fi
+echo
+
 # 检查是否为群晖系统
 is_syno_system() {
     # 群晖系统通常会有 /etc.defaults/VERSION 文件
@@ -189,7 +205,9 @@ create_env_json() {
   "quark_cookie": "",
   "uc_cookie": "",
   "bili_cookie": "",
-  "thread": "10"
+  "thread": "10",
+  "enable_dr2": "1",
+  "enable_py": "2"
 }
 EOF
         if [ $? -eq 0 ]; then
@@ -234,28 +252,28 @@ initialize_default_env() {
         echo -e "${YELLOW}.env文件不存在，正在使用.env.development作为模板创建...${NC}"
         # 提示用户输入自定义值，并设置30秒超时
         echo -ne "${YELLOW}请输入网盘入库密码（30秒内无输入则使用默认值'drpys'直接回车可跳过）：${NC}"
-        read -t 30 dir_path
+        read -t 30 cookie_auth_code
         echo
         if [ -z "$cookie_auth_code" ]; then
             cookie_auth_code="drpys"
         fi
 
         echo -ne "${YELLOW}请输入登录用户名（30秒内无输入则使用默认值'admin'直接回车可跳过）：${NC}"
-        read -t 30 dir_path
+        read -t 30 api_auth_name
         echo
         if [ -z "$api_auth_name" ]; then
             api_auth_name="admin"
         fi
 
         echo -ne "${YELLOW}请输入登录密码（30秒内无输入则使用默认值'drpys'直接回车可跳过）：${NC}"
-        read -t 30 dir_path
+        read -t 30 api_auth_code
         echo
         if [ -z "$api_auth_code" ]; then
             api_auth_code="drpys"
         fi
 
         echo -ne "${YELLOW}请输入订阅PWD值（30秒内无输入则使用默认值'dzyyds'直接回车可跳过）：${NC}"
-        read -t 30 dir_path
+        read -t 30 api_pwd
         echo
         if [ -z "$api_pwd" ]; then
             api_pwd="dzyyds"
@@ -329,7 +347,12 @@ else
         echo -e "${YELLOW}正在执行yarn..."
         yarn config set registry https://registry.npmmirror.com/
         yarn
-        echo -e "${GREEN}yarn执行成功，正在启动应用...${NC}"
+        echo -e "${GREEN}yarn执行成功，开始安装python环境...${NC}"
+        python3 -m venv $REPO_DIR/$PROJECT_NAME/.venv
+        source $REPO_DIR/$PROJECT_NAME/.venv/bin/activate
+        VIRTUAL_ENV=$REPO_DIR/$PROJECT_NAME/.venv
+        pip install -r spider/py/base/requirements.txt -i https://mirrors.cloud.tencent.com/pypi/simple
+        echo -e "${GREEN}python执行成功，开始启动项目...${NC}"
         pm2 start index.js --name drpyS
         pm2 save
         pm2 startup
@@ -346,7 +369,7 @@ else
 fi
 
 # 定义备份函数
-backup_files_and_cookie_auth_code() {
+backup_files() {
     # 备份前先检查文件是否存在，不存在则自动创建
         create_env_json "$REPO_DIR/$PROJECT_NAME"
         create_default_env "$REPO_DIR/$PROJECT_NAME"
@@ -366,7 +389,7 @@ backup_files_and_cookie_auth_code() {
     echo -e "${YELLOW}正在备份.env文件...${NC}"
     cp ".env" "./$env_backup_file"
     if [ $? -eq 0 ]; then
-        echo -e "${YELLOW}.env文件已备份为 $env_backup_file${NC}"
+        echo -e "${GREEN}.env文件已备份为 $env_backup_file${NC}"
     else
         echo -e "${RED}备份.env文件失败。${NC}"
         exit 1
@@ -383,7 +406,7 @@ backup_files_and_cookie_auth_code() {
         echo -e "${RED}备份map.txt文件失败。${NC}"
         exit 1
     fi
-
+    
     # 备份parses.conf文件
     local parses_conf_path="$REPO_DIR/$PROJECT_NAME/config/parses.conf"
     local parses_conf_backup_file="parses.conf.backup_$(date +%Y%m%d)"
@@ -395,10 +418,22 @@ backup_files_and_cookie_auth_code() {
         echo -e "${RED}备份parses.conf文件失败。${NC}"
         exit 1
     fi
+    
+    # 备份order_common.example.html文件
+    local order_common_example_path="$REPO_DIR/$PROJECT_NAME/public/sub/order_common.example.html"
+    local order_common_example_backup_file="order_common.example.html.backup_$(date +%Y%m%d)"
+    echo -e "${YELLOW}正在备份order_common.example.html文件...${NC}"
+    cp "$order_common_example_path" "./$order_common_example_backup_file"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}order_common.example.html文件已备份为 $order_common_example_backup_file${NC}"
+    else
+        echo -e "${RED}备份order_common.example.html文件失败。${NC}"
+        exit 1
+    fi   
 }
 
 # 定义恢复函数
-restore_env_json_and_cookie_auth_code() {
+restore_file() {
     # 恢复env.json文件
     local env_json_backup_file="env.json.backup_$(date +%Y%m%d).json"
     if [ -f "./$env_json_backup_file" ]; then
@@ -432,7 +467,7 @@ restore_env_json_and_cookie_auth_code() {
         echo -e "${RED}备份文件 $env_backup_file 不存在，无法恢复.env文件。${NC}"
         exit 1
     fi
-    
+
     # 恢复map.txt文件
     local map_txt_backup_file="map.txt.backup_$(date +%Y%m%d)"
     if [ -f "./$map_txt_backup_file" ]; then
@@ -466,6 +501,23 @@ restore_env_json_and_cookie_auth_code() {
         echo -e "${RED}备份文件 $parses_conf_backup_file 不存在，无法恢复parses.conf文件。${NC}"
         exit 1
     fi 
+        
+    # 恢复order_common.example.html文件
+        local order_common_example_backup_file="order_common.example.html.backup_$(date +%Y%m%d)"
+    if [ -f "./$order_common_example_backup_file" ]; then
+        echo -e "${YELLOW}正在恢复order_common.example.html文件...${NC}"
+        cp "./$order_common_example_backup_file" "$REPO_DIR/$PROJECT_NAME/public/sub/order_common.example.html"
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}order_common.example.html文件已恢复。${NC}"
+            rm "./$order_common_example_backup_file"  # 删除备份文件
+        else
+            echo -e "${RED}恢复order_common.example.html文件失败。${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}备份文件 $order_common_example_backup_file 不存在，无法恢复order_common.example.html文件。${NC}"
+        exit 1
+    fi
 }
 
 # 尝试次数限制，避免无限循环
@@ -485,7 +537,7 @@ pull_repo() {
         # 执行yarn
         echo -e "${YELLOW}正在还原备份的文件和入库密码值${NC}"
         # Git pull成功后执行pm2 restart drpyS之前，还原配置文件和COOKIE_AUTH_CODE值
-        restore_env_json_and_cookie_auth_code
+        restore_file
         echo -e "${YELLOW}正在执行yarn...${NC}"
         if yarn; then
             echo -e "${GREEN}yarn执行成功。${NC}"
@@ -520,7 +572,7 @@ pull_repo() {
         echo -e "${YELLOW}本地文件已被强制覆盖。${NC}"
         echo -e "${YELLOW}正在还原备份的文件和入库密码值${NC}"
         # Git pull成功后执行pm2 restart drpyS之前，还原配置文件和COOKIE_AUTH_CODE值
-        restore_env_json_and_cookie_auth_code
+        restore_file
         if yarn; then
             echo -e "${GREEN}yarn执行成功。${NC}"
             pm2 restart drpyS
@@ -579,7 +631,7 @@ while true; do
     # 如果git fetch成功，检查是否有更新
     if git status | grep -q "Your branch is behind"; then
         echo -e "${YELLOW}检测到有更新，执行备份文件${NC}"
-        backup_files_and_cookie_auth_code # 调用备份函数
+        backup_files # 调用备份函数
         while [ $ATTEMPT_COUNT -lt $MAX_ATTEMPTS ]; do
             if pull_repo; then
                 echo -e "${GREEN}更新仓库完成"
