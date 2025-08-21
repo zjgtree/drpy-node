@@ -110,7 +110,7 @@ const handleExit = async (signal) => {
 };
 
 // 捕获常见退出信号（Linux 上 pm2 stop 会发 SIGINT 或 SIGTERM）
-['SIGINT', 'SIGTERM'].forEach((sig) => {
+['SIGINT', 'SIGTERM', 'SIGUSR2'].forEach((sig) => {
     process.on(sig, () => handleExit(sig));
 });
 

@@ -109,7 +109,11 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
         valid_files = valid_files.filter(it => !(new RegExp('\\[[密]\\]|密+')).test(it));
     }
     let SitesMap = getSitesMap(configDir);
+    let mubanKeys = Object.keys(SitesMap);
     // console.log(SitesMap);
+    // console.log(mubanKeys);
+    // 排除模板后缀的DS源
+    valid_files = valid_files.filter(it => !/\[模板]\.js$/.test(it));
     log(`开始生成ds的t4配置，jsDir:${jsDir},源数量: ${valid_files.length}`);
     const tasks = valid_files.map((file) => {
         return {
@@ -156,11 +160,12 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 ruleMeta.title = enableRuleName ? ruleMeta.title || baseName : baseName;
 
                 let fileSites = [];
+                const isMuban = mubanKeys.includes(baseName);
                 if (baseName === 'push_agent') {
                     let key = 'push_agent';
                     let name = `${ruleMeta.title}(DS)`;
                     fileSites.push({key, name});
-                } else if (SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                } else if (isMuban && SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
                     SitesMap[baseName].forEach((it) => {
                         let key = `drpyS_${it.alias}`;
                         let name = `${it.alias}(DS)`;
@@ -170,6 +175,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         }
                         fileSites.push({key, name, ext});
                     });
+                } else if (isMuban) {
+                    return
                 } else {
                     let key = `drpyS_${ruleMeta.title}`;
                     let name = `${ruleMeta.title}(DS)`;
@@ -380,11 +387,12 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
                     let fileSites = [];
                     ext = ext || ruleMeta.ext || '';
+                    const isMuban = mubanKeys.includes(baseName) || /^(APP|getapp3)/.test(baseName);
                     if (baseName === 'push_agent') {
                         let key = 'push_agent';
                         let name = `${ruleMeta.title}(hipy)`;
                         fileSites.push({key, name, ext});
-                    } else if (SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                    } else if (isMuban && SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
                         // console.log(SitesMap[baseName]);
                         SitesMap[baseName].forEach((it) => {
                             let key = `hipy_py_${it.alias}`;
@@ -396,6 +404,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                             console.log(`[HIPY-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${logExt(_ext)}`);
                             fileSites.push({key, name, ext: _ext});
                         });
+                    } else if (isMuban) {
+                        return
                     } else {
                         let key = `hipy_py_${ruleMeta.title}`;
                         let name = `${ruleMeta.title}(hipy)`;
@@ -436,11 +446,12 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 func: async ({file, catDir, requestHost, pwd, SitesMap}) => {
                     const baseName = path.basename(file, '.js'); // 去掉文件扩展名
                     const extJson = path.join(catDir, baseName + '.json');
-                    let api = enable_cat === '1' ? `${requestHost}/cat/${file}` : `${requestHost}/api/${baseName}?do=cat`;  // 使用请求的 host 地址，避免硬编码端口
+                    const isT3 = enable_cat === '1' || baseName.includes('[B]');
+                    let api = isT3 ? `${requestHost}/cat/${file}` : `${requestHost}/api/${baseName}?do=cat`;  // 使用请求的 host 地址，避免硬编码端口
                     let ext = existsSync(extJson) ? `${requestHost}/cat/${file}` : '';
 
                     if (pwd) {
-                        api += api_type === 3 ? '?' : '&';
+                        api += isT3 ? '?' : '&';
                         api += `pwd=${pwd}`;
                         if (ext) {
                             ext += `?pwd=${pwd}`;
@@ -500,7 +511,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         const site = {
                             key: fileSite.key,
                             name: fileSite.name,
-                            type: api_type, // 固定值
+                            type: isT3 ? 3 : api_type, // 固定值
                             api,
                             ...ruleMeta,
                             ext: fileSite.ext || "", // 固定为空字符串

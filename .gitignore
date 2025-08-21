@@ -147,3 +147,4 @@ dist
 /database.db
 /scripts/python/XYQ提取结果.json
 *.pyc
+/scripts/python/appMap.txt

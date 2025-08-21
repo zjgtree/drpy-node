@@ -52,6 +52,7 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
         self.extend = ''
         self.ENV = _ENV
         # self.log(f't4_api:{t4_api}')
+        self._cache = {}
 
     def __new__(cls, *args, **kwargs):
         if cls._instance:
@@ -137,6 +138,53 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
 
     def setExtendInfo(self, extend):
         self.extend = extend
+
+    def setCache(self, key, value, expire=None):
+        """
+        设置缓存键值对，可选的过期时间
+
+        参数:
+            key: 缓存键
+            value: 缓存值
+            expire: 过期时间（秒），None表示永不过期
+        """
+        self._cache[key] = {
+            'value': value,
+            'expire': time.time() + expire if expire else None
+        }
+
+    def getCache(self, key):
+        """
+        获取缓存值，如果已过期则返回None并删除该键
+
+        参数:
+            key: 缓存键
+
+        返回:
+            对应的缓存值，如果键不存在或已过期则返回 None
+        """
+        if key not in self._cache:
+            return None
+
+        item = self._cache[key]
+
+        # 检查是否过期
+        if item['expire'] and time.time() > item['expire']:
+            del self._cache[key]  # 删除过期项
+            return None
+
+        return item['value']
+
+    def cleanup(self):
+        """清理所有过期的缓存项"""
+        current_time = time.time()
+        expired_keys = [
+            key for key, item in self._cache.items()
+            if item['expire'] and current_time > item['expire']
+        ]
+
+        for key in expired_keys:
+            del self._cache[key]
 
     def regStr(self, src, reg, group=1):
         m = re.search(reg, src)
