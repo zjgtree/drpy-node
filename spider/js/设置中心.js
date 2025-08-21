@@ -367,6 +367,8 @@ var rule = {
                 d.push(getInput('get_enable_py', '查看py源启用状态', images.settings));
                 d.push(genMultiInput('enable_cat', '设置cat源启用状态', '设置为1可启用此功能,设置为2启用T4(默认没设置也属于启动，设置其他值关闭)', images.settings));
                 d.push(getInput('get_enable_cat', '查看cat源启用状态', images.settings));
+                d.push(genMultiInput('enable_old_config', '设置兼容性配置', '设置为1可启用此功能(默认关闭)', images.settings));
+                d.push(getInput('get_enable_old_config', '查看兼容性配置', images.settings));
 
                 d.push(genMultiInput('now_ai', '设置当前AI', '1: 讯飞星火 2:deepseek 3.讯飞智能体 4.Kimi \n如果不填，连续对话默认使用讯飞星火', images.settings));
                 d.push(getInput('get_now_ai', '查看当前AI', images.settings));
@@ -1049,6 +1051,7 @@ var rule = {
             'enable_dr2',
             'enable_py',
             'enable_cat',
+            'enable_old_config',
             'enable_rule_name',
             'spark_ai_authKey',
             'deepseek_apiKey',
@@ -1078,6 +1081,7 @@ var rule = {
             'get_enable_dr2',
             'get_enable_py',
             'get_enable_cat',
+            'get_enable_old_config',
             'get_enable_rule_name',
             'get_spark_ai_authKey',
             'get_deepseek_apiKey',

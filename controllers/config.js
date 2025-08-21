@@ -100,6 +100,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
     let link_jar = '';
     let enableRuleName = ENV.get('enable_rule_name', '0') === '1';
+    let enableOldConfig = Number(ENV.get('enable_old_config', '0'));
     let isLoaded = await drpyS.isLoaded();
     let forceHeader = Number(process.env.FORCE_HEADER) || 0;
     let dr2ApiType = Number(process.env.DR2_API_TYPE) || 0; // 0 ds里的api 1壳子内置
@@ -389,7 +390,9 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                             let key = `hipy_py_${it.alias}`;
                             let name = `${it.alias}(hipy)`;
                             let _ext = it.queryStr;
-                            _ext = parseExt(_ext);
+                            if (!enableOldConfig) {
+                                _ext = parseExt(_ext);
+                            }
                             console.log(`[HIPY-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${logExt(_ext)}`);
                             fileSites.push({key, name, ext: _ext});
                         });
@@ -481,7 +484,9 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                             let key = `catvod_${it.alias}`;
                             let name = `${it.alias}(cat)`;
                             let _ext = it.queryStr;
-                            _ext = parseExt(_ext);
+                            if (!enableOldConfig) {
+                                _ext = parseExt(_ext);
+                            }
                             console.log(`[CAT-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${logExt(_ext)}`);
                             fileSites.push({key, name, ext: _ext});
                         });
