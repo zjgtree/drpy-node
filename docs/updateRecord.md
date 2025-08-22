@@ -7,6 +7,7 @@
 1. 增加一堆 `hipy` 模板源 和相关APP模板
 2. hipy spider 增加 `setCache` `getCache` 函数
 3. map.txt 分隔符从 `@` 改为 `@@`
+4. 优化hipy守护进程执行逻辑，改善性能、稳定性、内存管理
 
 ### 20250821
 

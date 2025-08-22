@@ -17,6 +17,10 @@ const _config_path = path.join(__dirname, '../config');
 const _lib_path = path.join(__dirname, '../spider/py');
 const timeout = 30000; // 30秒超时
 
+function stringify(arg) {
+    return Array.isArray(arg) || typeof arg == "object" ? JSON.stringify(arg) : arg
+}
+
 const json2Object = function (json) {
     // console.log('json2Object:', json);
     if (!json) {
@@ -107,13 +111,13 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
             `--script-path "${filePath}"`,
             `--method-name "${methodName}"`,
             `--env '${JSON.stringify(env)}'`,
-            ...args.map(arg => `--arg '${JSON.stringify(arg)}'`)
+            ...args.map(arg => `--arg '${stringify(arg)}'`)
         ].join(' ');
         // console.log(command);
         const cmd_args = [];
         args.forEach(arg => {
             cmd_args.push(`--arg`);
-            cmd_args.push(`${JSON.stringify(arg)}`);
+            cmd_args.push(`${stringify(arg)}`);
         });
         const options = {
             mode: 'text',
@@ -165,7 +169,7 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
     // 定义Spider类的方法
     const spiderMethods = [
         'init', 'home', 'homeVod', 'homeContent', 'category',
-        'detail', 'search', 'play', 'proxy', 'action', 'initEnv'
+        'detail', 'search', 'play', 'proxy', 'action'
     ];
 
     // 为代理对象添加方法
@@ -174,11 +178,6 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
             return callPythonMethod(method, env, ...args);
         };
     });
-
-    // 处理initEnv调用
-    if (typeof spiderProxy.initEnv === 'function' && env) {
-        await spiderProxy.initEnv(env);
-    }
 
     return spiderProxy;
 }
@@ -194,12 +193,12 @@ const init = async function (filePath, env = {}, refresh) {
         const fileHash = computeHash(fileContent);
         const moduleName = path.basename(filePath, '.js');
         let moduleExt = env.ext || '';
-        const default_init_cfg = {
-            stype: 4, //T3/T4 源类型
-            skey: `hipy_${moduleName}`,
-            sourceKey: `hipy_${moduleName}`,
-            ext: moduleExt,
-        };
+        // const default_init_cfg = { // T3才需要这种结构
+        //     stype: 4, //T3/T4 源类型
+        //     skey: `hipy_${moduleName}`,
+        //     sourceKey: `hipy_${moduleName}`,
+        //     ext: moduleExt,
+        // };
         let SitesMap = getSitesMap(_config_path);
         if (moduleExt && SitesMap[moduleName]) {
             try {
@@ -226,7 +225,8 @@ const init = async function (filePath, env = {}, refresh) {
         module = await loadEsmWithHash(filePath, fileHash, env);
         // console.log('module:', module);
         const rule = module;
-        const initValue = await rule.init(default_init_cfg) || {};
+        // const initValue = await rule.init(default_init_cfg) || {};
+        const initValue = await rule.init(moduleExt) || {};
         let t2 = getNowTime();
         const moduleObject = deepCopy(rule);
         moduleObject.cost = t2 - t1;

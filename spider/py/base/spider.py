@@ -51,8 +51,8 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
         self.t4_api = t4_api or ''
         self.extend = ''
         self.ENV = _ENV
-        # self.log(f't4_api:{t4_api}')
         self._cache = {}
+        self.log(f'BaseSpider __init__ t4_api:{t4_api}')
 
     def __new__(cls, *args, **kwargs):
         if cls._instance:
@@ -106,18 +106,12 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
     def manualVideoCheck(self):
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def getName(self):
-        pass
+        return 'BaseSpider'
 
     def init_api_ext_file(self):
         pass
-
-    def initEnv(self, env=None):
-        if env is None:
-            env = {}
-        self._ENV = env
-        self.t4_api = env.get('proxyUrl')
 
     def getProxyUrl(self):
         """
