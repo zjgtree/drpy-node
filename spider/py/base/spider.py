@@ -10,6 +10,7 @@ import re
 import json
 import zlib
 import gzip
+from typing import List
 
 import requests
 import warnings
@@ -423,6 +424,65 @@ class BaseSpider(metaclass=ABCMeta):  # 元类 默认的元类 type
         @return:
         """
         return gzip.decompress(compressed)
+
+    @staticmethod
+    def gzip(input_str: str) -> str:
+        """
+        将字符串进行 gzip 压缩，并返回 base64 编码的结果
+
+        Args:
+            input_str: 要压缩的字符串
+
+        Returns:
+            base64 编码的压缩数据
+        """
+        try:
+            # 将字符串编码为 UTF-8 字节
+            utf8_bytes = input_str.encode('utf-8')
+
+            # 使用 zlib 进行 gzip 压缩
+            # wbits 参数设置为 31 表示使用 gzip 头部和尾部
+            compressed_data = zlib.compress(utf8_bytes, level=zlib.Z_BEST_COMPRESSION, wbits=31)
+
+            # 将压缩数据编码为 base64 字符串
+            b64_data = base64.b64encode(compressed_data).decode('ascii')
+
+            return b64_data
+
+        except Exception as e:
+            raise ValueError(f"压缩过程中出错: {str(e)}")
+
+    @staticmethod
+    def ungzip(b64_data: str) -> str:
+        """
+        解码 base64 字符串，进行 gzip 解压缩，并返回 UTF-8 字符串
+
+        Args:
+            b64_data: base64 编码的压缩数据
+
+        Returns:
+            解压缩后的 UTF-8 字符串
+        """
+        try:
+            # 解码 base64 字符串
+            compressed_data = base64.b64decode(b64_data)
+
+            # 使用 zlib 进行 gzip 解压缩
+            # wbits 参数设置为 15+32 表示自动检测 gzip 头部
+            decompressed_data = zlib.decompress(compressed_data, zlib.MAX_WBITS | 32)
+
+            # 将字节数据解码为 UTF-8 字符串
+            return decompressed_data.decode('utf-8')
+
+        except Exception as e:
+            raise ValueError(f"解压缩过程中出错: {str(e)}")
+
+    # 辅助函数：将字节数组转换为 UTF-8 字符串（如果需要）
+    @staticmethod
+    def utf8_array_to_str(data: List[int]) -> str:
+        """将整数列表（字节值）转换为 UTF-8 字符串"""
+        byte_array = bytes(data)
+        return byte_array.decode('utf-8')
 
     @staticmethod
     def bytes2stream(some_bytes: bytes):

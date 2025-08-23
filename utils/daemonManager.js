@@ -30,10 +30,11 @@ function log(logFile, level, msg) {
 }
 
 export class DaemonManager {
-    constructor(rootDir) {
+    constructor(rootDir, daemonMode = 0) {
         this.rootDir = rootDir;
-        this.config = this.getDaemonConfig();
         this.daemonShell = null;
+        this.daemonFile = daemonMode ? 't4_daemon_lite.py' : 't4_daemon.py'
+        this.config = this.getDaemonConfig();
     }
 
     getDaemonConfig() {
@@ -43,7 +44,7 @@ export class DaemonManager {
         return {
             pidFile: path.join(this.rootDir, 't4_daemon.pid'),
             logFile: path.join(logsDir, 'daemon.log'),
-            daemonScript: path.join(this.rootDir, 'spider/py/core', 't4_daemon.py'),
+            daemonScript: path.join(this.rootDir, 'spider/py/core', this.daemonFile),
             clientScript: path.join(this.rootDir, 'spider/py/core', 'bridge.py'),
             host: '127.0.0.1',
             port: 57570,
@@ -116,6 +117,10 @@ export class DaemonManager {
             log(this.config.logFile, 'INFO', 'Python 守护进程已在运行');
             return;
         }
+        if (!await this.isPythonAvailable()) {
+            log(this.config.logFile, 'INFO', '当前环境不支持Python,跳过启动守护进程');
+            return;
+        }
 
         this.cleanupFiles();
 
@@ -133,7 +138,7 @@ export class DaemonManager {
             ],
         };
 
-        log(this.config.logFile, 'INFO', '正在启动 Python 守护进程...');
+        log(this.config.logFile, 'INFO', `正在启动 Python 守护进程 [${this.daemonFile}]...`);
         const daemonShell = new PythonShell(path.basename(this.config.daemonScript), options);
         this.daemonShell = daemonShell;
 
@@ -191,4 +196,4 @@ export class DaemonManager {
 }
 
 
-export const daemon = new DaemonManager(rootDir);
+export const daemon = new DaemonManager(rootDir, Number(process.env.daemonMode) || 0);

@@ -7,3 +7,4 @@ jsonpath
 json5
 jpype1
 pympler
+jinja2

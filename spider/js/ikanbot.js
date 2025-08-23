@@ -17,7 +17,8 @@ var rule = {
     类型: '影视',
     title: 'ikanbot',
     desc: 'ikanbot纯js版本',
-    homeUrl: 'https://v.ikanbot.com',
+    // homeUrl: 'https://v.ikanbot.com',
+    homeUrl: 'https://v.aikanbot.com',
     url: '',
     searchUrl: '/search?q=**',
     searchable: 2,
@@ -67,7 +68,8 @@ var rule = {
             return {
                 vod_id: item.attribs.href,
                 vod_name: img.attribs.alt,
-                vod_pic: getProxyUrl() + '&url=' + base64Encode(img.attribs['data-src']),
+                // vod_pic: getProxyUrl() + '&url=' + base64Encode(img.attribs['data-src']),
+                vod_pic: img.attribs['data-src'],
                 vod_remarks: '',
             };
         }).toArray();

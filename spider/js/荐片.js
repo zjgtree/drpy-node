@@ -9,31 +9,39 @@
   title: '荐片',
   lang: 'ds'
 })
-*/var rule = {
+*/
+let imghost = '';
+
+var rule = {
     title: '荐片',
     // host: 'http://api2.rinhome.com',
     //host: 'https://oiuzy.haitu33.com',
     host: 'https://dns.alidns.com/resolve?name=jpmobile.jianpiandns.com&type=TXT',
     hostJs: async function () {
-        let {HOST} = this;
-        log(HOST)
-        var html = await request(HOST, {headers: {"User-Agent": MOBILE_UA}});
-        let json = JSON.parse(html);
-        let data = json.Answer[0].data.replace(/'|"/g, '').split(',');
-        src = data[0];
-        if (!src.startsWith('http')) {
-            src = 'https://' + src;
-        }
-        HOST = src
+        // let {HOST} = this;
+        // log(HOST)
+        // var html = await request(HOST, {headers: {"User-Agent": MOBILE_UA}});
+        // let json = JSON.parse(html);
+        // let data = json.Answer[0].data.replace(/'|"/g, '').split(',');
+        // src = data[0];
+        // if (!src.startsWith('http')) {
+        //     src = 'https://' + src;
+        // }
+        // HOST = src
+        HOST = 'https://api.ubj83.com'
+        imghost = `https://${JSON.parse((await req(`${HOST}/api/appAuthConfig`)).content).data.imgDomain}`;
         return HOST
     },
-    homeUrl: '/api/tag/hand?code=unknown601193cf375db73d&channel=wandoujia',//网站的首页链接,用于分类获取和推荐获取
+    // homeUrl: '/api/tag/hand?code=unknown601193cf375db73d&channel=wandoujia',//网站的首页链接,用于分类获取和推荐获取
+    homeUrl: '/api/slide/list?pos_id=88',//网站的首页链接,用于分类获取和推荐获取
     // url:'/api/crumb/list?area=0&category_id=fyclass&page=fypage&type=0&limit=24&fyfilter',
     url: '/api/crumb/list?page=fypage&type=0&limit=24&fyfilter',
-    class_name: '全部&电影&电视剧&动漫&综艺',     // 筛选 /api/term/ad_fenlei?limit=10&page=1
-    class_url: '0&1&2&3&4',
-    detailUrl: '/api/node/detail?channel=wandoujia&token=&id=fyid',//二级详情拼接链接(json格式用)
-    searchUrl: '/api/video/search?key=**&page=fypage',
+    class_name: '电影&电视剧&动漫&综艺',     // 筛选 /api/term/ad_fenlei?limit=10&page=1
+    class_url: '1&2&3&4',
+    // detailUrl: '/api/node/detail?channel=wandoujia&token=&id=fyid',//二级详情拼接链接(json格式用)
+    detailUrl: '/api/video/detailv2?id=fyid',//二级详情拼接链接(json格式用)
+    // searchUrl: '/api/video/search?key=**&page=fypage',
+    searchUrl: '/api/v2/search/videoV2?key=**&category_id=88&page=fypage&pageSize=20',
     searchable: 2,
     quickSearch: 0,
     filterable: 1,
@@ -46,37 +54,78 @@
         3: {cateId: '3'},
         4: {cateId: '4'}
     },
+    // headers: {
+    //     'User-Agent': 'jianpian-android/350',
+    //     'JPAUTH': 'y261ow7kF2dtzlxh1GS9EB8nbTxNmaK/QQIAjctlKiEv'
+    // },
     headers: {
-        'User-Agent': 'jianpian-android/350',
-        'JPAUTH': 'y261ow7kF2dtzlxh1GS9EB8nbTxNmaK/QQIAjctlKiEv'
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 9; V2196A Build/PQ3A.190705.08211809; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36;webank/h5face;webank/1.0;netType:NETWORK_WIFI;appVersion:416;packageName:com.jp3.xg3',
     },
     timeout: 5000,
     limit: 8,
     play_parse: true,
-    lazy: async function () {
-        let {input} = this;
+    lazy: async function (flag, id, flags) {
+        // let {input} = this;
+        // return {
+        //     parse: 0,
+        //     url: input,
+        //     jx: 0
+        // }
+
         return {
             parse: 0,
-            url: input,
-            jx: 0
+            url: id.indexOf(".m3u8") > -1?id:`tvbox-xg:${id}`
         }
 
+    },
+    parseList(html) {
+        let res = JSON.parse(html);
+        // console.log(res);
+
+        return res.data.map(item => ({
+            vod_id: item.jump_id || item.id,
+            vod_name: item.title,
+            vod_pic: `${imghost}${item.thumbnail}`,
+            vod_remarks: item.mask,
+            style: {"type": "rect", "ratio": 1.33}
+        }))
+},
+    parseDetail(html) {
+        let res = JSON.parse(html).data;
+        let play_from = res.source_list_source.map(item => item.name).join('$$$').replace(/常规线路/g, '边下边播');
+        let play_url = res.source_list_source.map(play =>
+            play.source_list.map(({source_name, url}) => `${source_name}$${url}`).join('#')
+        ).join('$$$');
+
+        var vod = {
+            "type_name": '',
+            "vod_year": res.year,
+            "vod_area": res.area,
+            "vod_remarks": res.mask,
+            "vod_content": res.description,
+            "vod_play_from": play_from,
+            "vod_play_url": play_url
+        };
+
+        return vod
     },
 
     推荐: async function () {
         let {input} = this;
         var d = [];
         var html = await request(input);
-        html = JSON.parse(html).data[0].video;
-        html.forEach(it => {
-            d.push({
-                title: it.title,
-                img: it.path + '@Referer=www.jianpianapp.com@User-Agent=jianpian-version353',
-                desc: it.playlist.title + ' ⭐' + it.score,
-                url: it.id
-            })
-        });
-        return setResult(d);
+        // console.log(html);
+        // html = JSON.parse(html).data[0].video;
+        // html.forEach(it => {
+        //     d.push({
+        //         title: it.title,
+        //         img: it.path + '@Referer=www.jianpianapp.com@User-Agent=jianpian-version353',
+        //         desc: it.playlist.title + ' ⭐' + it.score,
+        //         url: it.id
+        //     })
+        // });
+        // return setResult(d);
+        return this.parseList(html);
     },
     // 一级:'json:data;title;path;playlist.title;id',
     一级: async function (tid) {
@@ -87,12 +136,16 @@
             input = HOST + '/api/video/search?key=' + tid + '&page=' + +MY_PAGE;
         }
         var d = [];
+        // https://api.ubj83.com/api/crumb/list?page=1&type=0&limit=24&area=0&sort=update&year=0&category_id=0
+        // console.log('全部:',input);
         let html = await request(input);
+        // console.log(html);
         html = JSON.parse(html).data;
         html.forEach(it => {
             d.push({
                 title: it.title,
-                img: it.thumbnail || it.path,
+                // img: it.thumbnail || it.path,
+                img: `${imghost}${it.thumbnail || it.path}`,
                 desc: (it.mask || it.playlist.title) + ' ⭐' + it.score,
                 url: it.id
             })
@@ -113,7 +166,10 @@
         }
 
         try {
+            console.log(input);
             let html = await request(input);
+            // console.log(html);
+            return this.parseDetail(html);
             html = JSON.parse(html);
             let node = html.data;
             VOD = {
@@ -160,15 +216,16 @@
         let {input} = this;
         var d = [];
         let html = await request(input);
-        html = JSON.parse(html).data;
-        html.forEach(it => {
-            d.push({
-                title: it.title,
-                img: it.thumbnail,
-                desc: it.mask + ' ⭐' + it.score,
-                url: it.id
-            })
-        });
-        return setResult(d);
+        return this.parseList(html);
+        // html = JSON.parse(html).data;
+        // html.forEach(it => {
+        //     d.push({
+        //         title: it.title,
+        //         img: it.thumbnail,
+        //         desc: it.mask + ' ⭐' + it.score,
+        //         url: it.id
+        //     })
+        // });
+        // return setResult(d);
     },
 }

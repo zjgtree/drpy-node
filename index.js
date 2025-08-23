@@ -100,7 +100,7 @@ const handleExit = async (signal) => {
     try {
         console.log(`\nReceived ${signal}, closing server...`);
         // Fastify 提供的关闭方法，内部会触发 onClose 钩子
-        await fastify.close();
+        await stop();
         console.log('Fastify closed successfully');
         process.exit(0);
     } catch (err) {

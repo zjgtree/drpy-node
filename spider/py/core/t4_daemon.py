@@ -264,6 +264,14 @@ class SpiderManager:
         key_data = f"{Path(script_path).resolve()}|{proxy_url}|{ext}"
         return hashlib.sha256(key_data.encode("utf-8")).hexdigest()
 
+    @staticmethod
+    def compute_file_hash(file_path, algorithm='sha256', chunk_size=8192):
+        hash_func = hashlib.new(algorithm)
+        with open(file_path, 'rb') as f:
+            while chunk := f.read(chunk_size):
+                hash_func.update(chunk)
+        return hash_func.hexdigest()
+
     # ---------- 动态导入：返回 (module, module_name 或 None) ----------
     def _load_module_from_file(self, file_path: Path):
         """从文件加载模块，使用基于绝对路径哈希的唯一 module_name 避免冲突
@@ -271,6 +279,8 @@ class SpiderManager:
         """
         abs_path = str(file_path.resolve())
         module_name = "t4_spider_" + hashlib.sha256(abs_path.encode("utf-8")).hexdigest()[:16]
+        # 下面没用，导入的时候即使按文件hash来算，也不会重新导入
+        # module_name = "t4_spider_" + hashlib.sha256(self.compute_file_hash(abs_path).encode("utf-8")).hexdigest()[:16]
         # 确保项目根目录（文件所在目录）在 sys.path 中，支持 import base.xxx 之类的包导入
         project_root = file_path.parent
         if str(project_root) not in sys.path:
