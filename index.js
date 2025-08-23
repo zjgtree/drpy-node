@@ -47,14 +47,18 @@ fastify.addHook('onReady', async () => {
     }
 });
 
-// 停止时清理守护进程
-fastify.addHook('onClose', async () => {
+async function onClose() {
     try {
         await daemon.stopDaemon();
         fastify.log.info('Python守护进程已停止');
     } catch (error) {
         fastify.log.error(`停止Python守护进程失败: ${error.message}`);
     }
+}
+
+// 停止时清理守护进程
+fastify.addHook('onClose', async () => {
+    await onClose();
 });
 
 // 给静态目录插件中心挂载basic验证
@@ -100,7 +104,7 @@ const handleExit = async (signal) => {
     try {
         console.log(`\nReceived ${signal}, closing server...`);
         // Fastify 提供的关闭方法，内部会触发 onClose 钩子
-        await stop();
+        await onClose();
         console.log('Fastify closed successfully');
         process.exit(0);
     } catch (err) {
