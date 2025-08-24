@@ -74,25 +74,42 @@ var rule = {
     },
     double: true,
     推荐: '',
+    request: async function (url, obj) {
+        obj = obj || {};
+        try {
+            const response = await _fetch(url, {
+                method: obj.method || 'GET',
+                headers: obj.headers || {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
+                        'AppleWebKit/537.36 (KHTML, like Gecko) ' +
+                        'Chrome/139.0.0.0 Safari/537.36'
+                }
+            });
+            return response.text();
+        } catch (err) {
+            return ''
+        }
+    },
     一级: async function () {
         let {input, pdfa, pdfh, pd} = this;
-        let html = await request(input);
+        let html = await this.request(input);
+        // console.log('html:', html);
         let d = [];
-        let data = pdfa(html, 'ul.qm-pic-txt&&li');
+        let data = pdfa(html, 'ul.qm-cover-text&&li');
         data.forEach((it) => {
             d.push({
-                title: pdfh(it, 'a:eq(-1)&&Text'),
+                title: pdfh(it, '.s-tit&&Text'),
                 pic_url: pd(it, 'img&&src'),
-                desc: pdfh(it, '.s-name&&Text'),
+                desc: pdfh(it, '.s-author&&Text'),
                 url: pd(it, 'a&&href'),
-                content: pdfh(it, '.s-des&&Text'),
+                content: pdfh(it, '.s-desc&&Text'),
             })
         });
         return setResult(d)
     },
     二级: async function () {
         let {input, pdfa, pdfh, pd} = this;
-        let html = await request(input);
+        let html = await this.request(input);
         let VOD = {};
         VOD.vod_name = pdfh(html, 'span.txt&&Text');
         VOD.type_name = pdfh(html, '.qm-tag:eq(-1)&&Text');
@@ -110,7 +127,7 @@ var rule = {
         });
         // log(input);
         // log(listUrl);
-        let html1 = await request(listUrl);
+        let html1 = await this.request(listUrl);
         let json = JSON.parse(html1);
         let chapters = json.data.chapters;
         // log(chapters.length);
@@ -134,7 +151,7 @@ var rule = {
         params['sign'] = getSignStr(params);
         let _url = buildUrl(rule.searchUrl.split('#')[0], params);
         //log(_url);
-        let html = await request(_url, {
+        let html = await this.request(_url, {
             headers: rule.sign_headers
         });
         let json = JSON.parse(html);
