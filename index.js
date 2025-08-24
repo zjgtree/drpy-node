@@ -171,8 +171,9 @@ const start = async () => {
         const localAddress = `http://localhost:${PORT}`;
         const interfaces = os.networkInterfaces();
         let lanAddress = 'Not available';
-        for (const iface of Object.values(interfaces)) {
-            if (!iface) continue;
+        // console.log('interfaces:', interfaces);
+        for (const [key, iface] of Object.entries(interfaces)) {
+            if (key.startsWith('VMware Network Adapter VMnet') || !iface) continue;
             for (const config of iface) {
                 if (config.family === 'IPv4' && !config.internal) {
                     lanAddress = `http://${config.address}:${PORT}`;

@@ -4,6 +4,7 @@
   filterable: 0,
   quickSearch: 0,
   title: '设置中心',
+  logo: 'https://avatars.githubusercontent.com/u/49803097?v=4',
   more: {
     sourceTag: '设置,动作',
     actions: [

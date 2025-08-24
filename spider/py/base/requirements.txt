@@ -1,3 +1,4 @@
+# 推荐壳子必装依赖
 requests
 lxml
 pycryptodome
@@ -5,6 +6,10 @@ ujson
 pyquery
 jsonpath
 json5
-jpype1
-pympler
 jinja2
+cachetools
+# ds运行py依赖,ds必装，壳子不用装
+pympler
+
+# 可选安装的依赖，可弃用
+# jpype1

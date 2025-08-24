@@ -7,6 +7,7 @@ import {md5} from "../libs_drpy/crypto-util.js";
 import {PythonShell, PythonShellError} from 'python-shell';
 import {fastify} from "../controllers/fastlogger.js";
 import {daemon} from "../utils/daemonManager.js";
+import {netCallPythonMethod} from '../spider/py/core/bridge.js';
 
 // 缓存已初始化的模块和文件 hash 值
 const moduleCache = new Map();
@@ -175,7 +176,8 @@ const loadEsmWithHash = async function (filePath, fileHash, env) {
     // 为代理对象添加方法
     spiderMethods.forEach(method => {
         spiderProxy[method] = async (...args) => {
-            return callPythonMethod(method, env, ...args);
+            // return callPythonMethod(method, env, ...args);
+            return netCallPythonMethod(filePath, method, env, ...args);
         };
     });
 

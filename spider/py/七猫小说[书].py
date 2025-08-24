@@ -4,6 +4,7 @@
   filterable: 1,
   quickSearch: 1,
   title: '七猫小说',
+  logo: 'https://cdn-front.qimao.com/global/static/images/favicon2022.ico',
   lang: 'hipy'
 })
 """
@@ -27,6 +28,8 @@ import re
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 import hashlib
+
+TIMEOUT = 10
 
 
 class Spider(BaseSpider):
@@ -102,7 +105,7 @@ class Spider(BaseSpider):
         url1 = self.jinja_render(url1, fl=extend, host=self.host, tid=tid, page=pg)
         print('url:', url)
         print('url1:', url1)
-        r = requests.get(url, headers=self.headers)
+        r = requests.get(url, headers=self.headers, timeout=TIMEOUT)
         html = r.text
         d = []
         jsp = jsoup(url)
@@ -123,7 +126,7 @@ class Spider(BaseSpider):
                 "vod_content": pdfh(it, '.s-desc&&Text'),
             })
         try:
-            r = requests.get(url1, headers=self.headers)
+            r = requests.get(url1, headers=self.headers, timeout=TIMEOUT)
             json = r.json()
             book_list = json['data']['book_list']
             for book in d:
@@ -146,7 +149,7 @@ class Spider(BaseSpider):
 
     def detailContent(self, ids):
         url = ids[0]
-        r = requests.get(url, headers=self.headers)
+        r = requests.get(url, headers=self.headers, timeout=TIMEOUT)
         html = r.text
         jsp = jsoup(url)
         pdfh = jsp.pdfh
@@ -169,7 +172,7 @@ class Spider(BaseSpider):
         chapter_url = self.buildUrl(chapter_url, {
             'book_id': book_id
         })
-        r = requests.get(chapter_url, headers=self.headers)
+        r = requests.get(chapter_url, headers=self.headers, timeout=TIMEOUT)
         json = r.json()
         chapters = jsp.pjfa(json, 'data.chapters')
         # print('chapters:', chapters)
@@ -195,7 +198,7 @@ class Spider(BaseSpider):
         }
         params['sign'] = self.get_sign_str(params)
         url = self.buildUrl(url, params)
-        r = requests.get(url, headers=self.sign_headers)
+        r = requests.get(url, headers=self.sign_headers, timeout=TIMEOUT)
         json = r.json()
         # print('json:', json)
         books = json['data']['books']
@@ -219,7 +222,7 @@ class Spider(BaseSpider):
         url = 'https://api-ks.wtzw.com/api/v1/chapter/content'
         url = self.buildUrl(url, params)
         title = id.split('@@')[2]
-        r = requests.get(url, headers=self.sign_headers)
+        r = requests.get(url, headers=self.sign_headers, timeout=TIMEOUT)
         json_str = r.json()
         result = json_str['data']['content']
         content = self.decode_content(result)

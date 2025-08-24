@@ -1,6 +1,6 @@
 {
   "name": "drpy-node",
-  "version": "1.2.18",
+  "version": "1.2.19",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -51,6 +51,7 @@
     "node-sqlite3-wasm": "^0.8.35",
     "nodemailer": "^7.0.5",
     "p-queue": "^8.0.1",
+    "pickleparser": "^0.2.1",
     "pino": "^9.7.0",
     "pinyin": "^4.0.0",
     "python-shell": "^5.0.0",

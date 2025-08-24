@@ -28,7 +28,8 @@ var rule = {
         //     src = 'https://' + src;
         // }
         // HOST = src
-        HOST = 'https://api.ubj83.com'
+        // HOST = 'https://api.ubj83.com'
+        HOST = 'https://ij1men.slsw6.com'
         imghost = `https://${JSON.parse((await req(`${HOST}/api/appAuthConfig`)).content).data.imgDomain}`;
         return HOST
     },

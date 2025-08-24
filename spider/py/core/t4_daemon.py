@@ -50,7 +50,7 @@ PORT = 57570
 MAX_MSG_SIZE = 10 * 1024 * 1024  # 10MB
 MAX_CACHED_INSTANCES = 100  # 最大缓存实例数
 INIT_TIMEOUT = 10  # init 超时（秒）
-REQUEST_TIMEOUT = 20  # 单次请求 socket 超时（秒）
+REQUEST_TIMEOUT = 30  # 单次请求 socket 超时（秒）
 IDLE_EXPIRE = 30 * 60  # 实例空闲过期（秒）
 CLEAN_INTERVAL = 5 * 60  # 清理间隔（秒）
 MAX_CONCURRENT_INITS = 8  # 并发初始化上限（可按需调大/调小）
@@ -129,7 +129,10 @@ def recv_packet(rfile) -> dict:
     if length <= 0 or length > MAX_MSG_SIZE:
         raise ValueError("invalid length")
     payload = recv_exact(rfile, length)
-    return pickle.loads(payload)
+    try:
+        return json.loads(payload.decode("utf-8"))
+    except Exception:
+        return pickle.loads(payload)
 
 
 # =========================

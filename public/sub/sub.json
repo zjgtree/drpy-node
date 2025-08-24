@@ -35,5 +35,12 @@
     "reg": "\\[[盘]\\]|push_agent|推送",
     "mode": 0,
     "status": 1
+  },
+  {
+    "name": "仅HIPY",
+    "code": "hipy",
+    "reg": "hipy",
+    "mode": 0,
+    "status": 1
   }
 ]
