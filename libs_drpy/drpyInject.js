@@ -1,5 +1,6 @@
 import axios, {toFormData} from 'axios';
 import axiosX from './axios.min.js';
+import {createInstance} from './fetchAxios.js';
 import crypto from 'crypto';
 import http from "http";
 import https from 'https';
@@ -29,13 +30,21 @@ const httpAgent = new http.Agent(AgentOption);
 let httpsAgent = new https.Agent({rejectUnauthorized: false, ...AgentOption});
 
 // 配置 axios 使用代理
-const _axios = axios.create({
-    httpAgent,  // 用于 HTTP 请求的代理
-    httpsAgent, // 用于 HTTPS 请求的代理
+// const _axios = axios.create({
+//     httpAgent,  // 用于 HTTP 请求的代理
+//     httpsAgent, // 用于 HTTPS 请求的代理
+// });
+
+const _axios = createInstance({
+    headers: {'User-Agent': 'Mozilla/5.0'},
+    timeout: 10000,
+    responseType: 'text',
+    httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 证书错误
 });
 
 // 请求拦截器
-_axios.interceptors.request.use((config) => {
+// _axios.interceptors.request.use((config) => {
+_axios.useRequestInterceptor((config) => {
     // 生成 curl 命令
     const curlCommand = generateCurlCommand(config);
     if (ENV.get('show_curl', '0') === '1') {
