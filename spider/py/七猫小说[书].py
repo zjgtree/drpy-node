@@ -98,7 +98,10 @@ class Spider(BaseSpider):
         api_url = f'{self.host}/shuku/fyclass-fyfilter-fypage/'
         url = api_url.replace('fyclass', str(tid)).replace('fyfilter', filter_url).replace('fypage', str(pg))
         url = self.jinja_render(url, fl=extend)
+        url1 = "{{host}}/qimaoapi/api/classify/book-list?channel={{tid}}&category1={{fl.作品分类 or 'a'}}&category2=a&words={{fl.作品字数 or 'a'}}&update_time={{fl.更新时间 or 'a'}}&is_vip=a&is_over={{fl.是否完结 or 'a'}}&order={{fl.排序 or 'click'}}&page={{page}}"
+        url1 = self.jinja_render(url1, fl=extend, host=self.host, tid=tid, page=pg)
         print('url:', url)
+        print('url1:', url1)
         r = requests.get(url, headers=self.headers)
         html = r.text
         d = []
@@ -119,11 +122,21 @@ class Spider(BaseSpider):
                 "vod_pic": pd(it, 'img&&src'),
                 "vod_content": pdfh(it, '.s-desc&&Text'),
             })
+        try:
+            r = requests.get(url1, headers=self.headers)
+            json = r.json()
+            book_list = json['data']['book_list']
+            for book in d:
+                book_extra = [x for x in book_list if x.get('read_url') == book['vod_id']]
+                if len(book_extra) == 1:
+                    book['vod_pic'] = book_extra[0].get('image_link') or book['vod_pic']
+        except Exception:
+            pass
+
         result = {}
-        pagecount = 1
-        limit = 20
-        total = 9999
-        videos = []
+        pagecount = 999  # 设置为1就只能1页不能翻页
+        limit = 15  # 一页多少
+        total = 999999
         result['list'] = d
         result['page'] = pg
         result['pagecount'] = pagecount
