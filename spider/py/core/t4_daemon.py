@@ -684,14 +684,12 @@ class T4Handler(StreamRequestHandler):
     def handle(self):
         self.request.settimeout(REQUEST_TIMEOUT)
         try:
-            logger.info('before recv_packet')
             req = recv_packet(self.rfile)
-            logger.info('before recv_packet req')
             script_path = req.get("script_path", "")
             method_name = req.get("method_name", "")
             env = req.get("env", "") or ""
             args = req.get("args", []) or []
-            logger.info("T4Handler start: script_path:%s method_name:%s", script_path, method_name)
+            # logger.info("T4Handler start: script_path:%s method_name:%s", script_path, method_name)
             result = _manager.call(script_path, method_name, env, args)
             # 统一外层返回格式
             resp = {
