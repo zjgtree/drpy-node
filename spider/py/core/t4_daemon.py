@@ -11,7 +11,7 @@
 import hashlib
 import importlib
 import importlib.util
-import json
+import ujson
 import logging
 import os
 import pickle
@@ -130,7 +130,7 @@ def recv_packet(rfile) -> dict:
         raise ValueError("invalid length")
     payload = recv_exact(rfile, length)
     try:
-        return json.loads(payload.decode("utf-8"))
+        return ujson.loads(payload.decode("utf-8"))
     except Exception:
         return pickle.loads(payload)
 
@@ -251,7 +251,7 @@ class SpiderManager:
         ext = ""
         if isinstance(env_str, str) and env_str.strip():
             try:
-                data = json.loads(env_str)
+                data = ujson.loads(env_str)
                 proxy_url = data.get("proxyUrl", "") or ""
                 # 仅从解析出的字典取 ext 字段，若不存在则为空字符串
                 ext = data.get("ext", "") or ""
@@ -629,7 +629,7 @@ class SpiderManager:
                 parsed_args.append(a)
             elif isinstance(a, str):
                 try:
-                    parsed_args.append(json.loads(a))
+                    parsed_args.append(ujson.loads(a))
                 except Exception:
                     parsed_args.append(a)
             else:
@@ -684,12 +684,14 @@ class T4Handler(StreamRequestHandler):
     def handle(self):
         self.request.settimeout(REQUEST_TIMEOUT)
         try:
+            logger.info('before recv_packet')
             req = recv_packet(self.rfile)
+            logger.info('before recv_packet req')
             script_path = req.get("script_path", "")
             method_name = req.get("method_name", "")
             env = req.get("env", "") or ""
             args = req.get("args", []) or []
-
+            logger.info("T4Handler start: script_path:%s method_name:%s", script_path, method_name)
             result = _manager.call(script_path, method_name, env, args)
             # 统一外层返回格式
             resp = {
@@ -705,7 +707,10 @@ class T4Handler(StreamRequestHandler):
 
             send_packet(self.wfile, resp)
         except Exception as e:
-            logger.error("T4Handler error: %s", e)
+            if "peer closed during read" in str(e).lower():
+                logger.warning("Client connected then closed without sending data")
+            else:
+                logger.error("T4Handler error: %s", e)
             try:
                 send_packet(self.wfile, {"success": False, "error": str(e)})
             except Exception:
@@ -723,6 +728,7 @@ def run():
         _manager.stop()
         # 让 serve_forever() 退出
         srv.shutdown()
+        sys.exit(0)  # 保证退出码是 0
 
     if os.name == "posix":
         signal.signal(signal.SIGTERM, _stop)

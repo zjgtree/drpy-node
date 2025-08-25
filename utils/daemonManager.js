@@ -145,11 +145,16 @@ export class DaemonManager {
         daemonShell.on('message', (m) => log(this.config.logFile, 'INFO', `[守护进程] ${m}`));
         daemonShell.on('stderr', (m) => log(this.config.logFile, 'INFO', `[守护进程] ${m}`));
         daemonShell.on('error', (err) => log(this.config.logFile, 'CRITICAL', `错误: ${err.message}`));
-        daemonShell.on('close', (code) => {
-            log(this.config.logFile, 'INFO', `守护进程退出，代码: ${code}`);
+        daemonShell.on('close', (code, signal) => {
+            if (code !== null && code !== undefined) {
+                log(this.config.logFile, 'INFO', `[ON CLOSE]守护进程关闭，退出码: ${code}`);
+            } else {
+                log(this.config.logFile, 'WARN', `守护进程异常退出（可能被 kill），未返回退出码`);
+            }
             this.cleanupFiles();
             this.daemonShell = null;
         });
+
 
         daemonShell.childProcess.on('spawn', () => {
             if (hasWriteAccess) {

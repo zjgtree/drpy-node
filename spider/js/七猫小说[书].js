@@ -4,6 +4,7 @@
   filterable: 1,
   quickSearch: 0,
   title: '七猫小说[书]',
+  logo: 'https://cdn-front.qimao.com/global/static/images/favicon2022.ico',
   lang: 'ds'
 })
 */

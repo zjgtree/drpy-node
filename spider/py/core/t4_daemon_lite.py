@@ -4,7 +4,7 @@
 import hashlib
 import importlib
 import importlib.util
-import json
+import ujson
 import logging
 import os
 import pickle
@@ -119,7 +119,7 @@ def recv_packet(rfile) -> dict:
         raise ValueError("invalid length")
     payload = recv_exact(rfile, length)
     try:
-        return json.loads(payload.decode("utf-8"))
+        return ujson.loads(payload.decode("utf-8"))
     except Exception:
         return pickle.loads(payload)
 
@@ -201,7 +201,7 @@ class SpiderManager:
         ext = ""
         if isinstance(env_str, str) and env_str.strip():
             try:
-                data = json.loads(env_str)
+                data = ujson.loads(env_str)
                 proxy_url = data.get("proxyUrl", "") or ""
                 ext = data.get("ext", "") or ""
             except Exception:
@@ -408,7 +408,7 @@ class SpiderManager:
                 parsed_args.append(a)
             elif isinstance(a, str):
                 try:
-                    parsed_args.append(json.loads(a))
+                    parsed_args.append(ujson.loads(a))
                 except Exception:
                     parsed_args.append(a)
             else:
@@ -479,6 +479,7 @@ def run():
         _manager.stop()
         # 让 serve_forever() 退出
         srv.shutdown()
+        sys.exit(0)  # 保证退出码是 0
 
     if os.name == "posix":
         signal.signal(signal.SIGTERM, _stop)

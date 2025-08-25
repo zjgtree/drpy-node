@@ -28,32 +28,44 @@ globalThis.qs = qs;
 const AgentOption = {keepAlive: true, maxSockets: 64, timeout: 30000}; // 最大连接数64,30秒定期清理空闲连接
 const httpAgent = new http.Agent(AgentOption);
 let httpsAgent = new https.Agent({rejectUnauthorized: false, ...AgentOption});
-
+const dsReqLib = Number(process.env.DS_REQ_LIB) || 0;
+console.log('DS/CAT源底层req实现 DS_REQ_LIB (0 fetch 1 axios):', dsReqLib);
+let _axios;
 // 配置 axios 使用代理
-// const _axios = axios.create({
-//     httpAgent,  // 用于 HTTP 请求的代理
-//     httpsAgent, // 用于 HTTPS 请求的代理
-// });
 
-const _axios = createInstance({
-    headers: {'User-Agent': 'Mozilla/5.0'},
-    timeout: 10000,
-    responseType: 'text',
-    httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 证书错误
-});
+if (dsReqLib === 0) {
+    _axios = createInstance({
+        headers: {'User-Agent': 'Mozilla/5.0'},
+        timeout: 10000,
+        responseType: 'text',
+        httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 证书错误
+    });
 
 // 请求拦截器
-// _axios.interceptors.request.use((config) => {
-_axios.useRequestInterceptor((config) => {
+    _axios.useRequestInterceptor(RequestInterceptor, (error) => {
+        return Promise.reject(error);
+    });
+} else {
+    _axios = axios.create({
+        httpAgent,  // 用于 HTTP 请求的代理
+        httpsAgent, // 用于 HTTPS 请求的代理
+    });
+    // 请求拦截器
+    _axios.interceptors.request.use(RequestInterceptor, (error) => {
+        return Promise.reject(error);
+    });
+}
+
+function RequestInterceptor(config) {
     // 生成 curl 命令
+    const show_curl = Number(ENV.get('show_curl', '0')) === 1;
+    // console.log(`拦截器 show_curl: ${show_curl}`);
     const curlCommand = generateCurlCommand(config);
-    if (ENV.get('show_curl', '0') === '1') {
+    if (show_curl) {
         console.log(`Generated cURL command:\n${curlCommand}`);
     }
     return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+}
 
 /**
  * 生成 curl 命令

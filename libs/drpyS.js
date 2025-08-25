@@ -633,6 +633,7 @@ async function invokeWithInjectVars(rule, method, injectVars, args) {
         }
     });
     let result = {};
+    let ret_str = '';
     let error = null;
     try {
         result = await method.apply(thisProxy, args);
@@ -667,7 +668,8 @@ async function invokeWithInjectVars(rule, method, injectVars, args) {
             break;
         case 'lazy':
             result = await playParseAfter(rule, result, args[1], args[0]);
-            console.log(`免嗅 ${injectVars.input} 执行完毕,结果为:`, JSON.stringify(result));
+            ret_str = JSON.stringify(result);
+            console.log(`免嗅 ${injectVars.input} 执行完毕,结果为:`, ret_str.length < 100 ? ret_str : ret_str.slice(0, 100) + '...');
             break;
         case 'proxy_rule':
             break;
