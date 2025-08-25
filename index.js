@@ -3,8 +3,11 @@ import path from 'path';
 import os from 'os';
 import qs from 'qs';
 import {fileURLToPath} from 'url';
+import {spawn} from "child_process";
+import {existsSync} from 'fs';
 import formBody from '@fastify/formbody';
 import {validateBasicAuth, validateJs, validatePwd} from "./utils/api_validate.js";
+import {goProxy, getGoBinary} from "./utils/binaryManager.js"
 // 注册自定义import钩子
 import './utils/esm-register.mjs';
 // 引入python守护进程
@@ -17,6 +20,7 @@ const {fastify} = fastlogger;
 // 获取当前路径
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 5757;
+const GOPORT = 57571;
 const MAX_TEXT_SIZE = 0.1 * 1024 * 1024; // 设置最大文本大小为 0.1 MB
 // 定义options的目录
 const docsDir = path.join(__dirname, 'docs');
@@ -32,7 +36,8 @@ const catLibDir = path.join(__dirname, 'spider/catLib');
 const xbpqDir = path.join(__dirname, 'spider/xbpq');
 const viewsDir = path.join(__dirname, 'views');
 const configDir = path.join(__dirname, 'config');
-
+const goBinary = getGoBinary(__dirname);
+let goProc = null;
 // 注册插件以支持 application/x-www-form-urlencoded
 fastify.register(formBody);
 
@@ -135,6 +140,9 @@ process.on('exit', async (code) => {
     console.log(`Process exiting with code: ${code}`);
     // 这里不能直接用 await fastify.close()（Node 在 exit 里不等异步）
     // 但 Fastify 的 SIGINT/SIGTERM 会提前触发，所以这里只记录日志
+    if (goProc) {
+        goProc.kill();
+    }
 });
 
 registerRoutes(fastify, {
@@ -163,6 +171,23 @@ registerRoutes(fastify, {
 // 启动服务
 const start = async () => {
     try {
+
+        if (existsSync(goBinary)) { // 启动golang二进制
+            console.log('[goBinary]准备启动go二进制文件:', goBinary);
+            goProc = spawn(goBinary, ["-p", GOPORT], {
+                stdio: ["ignore", "pipe", "pipe"],
+            });
+
+            // 打印 Go 服务输出
+            goProc.stdout.on("data", (data) => {
+                console.log("[Go-Server]", data.toString().trim());
+            });
+            goProc.stderr.on("data", (data) => {
+                console.log("[Go-Server-STD]", data.toString().trim());
+            });
+        } else {
+            console.log(`[goBinary]找不到go二进制文件:${goBinary},跳过启动`);
+        }
         // 启动 Fastify 服务
         // await fastify.listen({port: PORT, host: '0.0.0.0'});
         await fastify.listen({port: PORT, host: '::'});

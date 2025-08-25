@@ -148,3 +148,4 @@ dist
 /scripts/python/XYQ提取结果.json
 *.pyc
 /scripts/python/appMap.txt
+/binary/

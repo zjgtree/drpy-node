@@ -210,10 +210,10 @@
     }
   },
   {
-    "key": "py_getapp3.4.2",
+    "key": "py_getapp3.4.4",
     "name": "AG³",
     "type": 3,
-    "api": "clan://sites/lib/getapp3.4.2.py",
+    "api": "clan://sites/lib/getapp3.4.4.py",
     "exts": {
       "小羊4k": {
         "host": "https://appcms.xy4k.com",
