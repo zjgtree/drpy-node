@@ -20,6 +20,7 @@ nodejs作为服务端的drpy实现。全面升级异步写法
 * [本站防止爬虫协议](/robots.txt)
 * [本项目主页-免翻](https://git-proxy.playdreamer.cn/hjdhnx/drpy-node)
 * [DS源适配猫影视](https://github.com/hjdhnx/CatPawOpen/tree/ds-cat)
+* [DS插件项目-golang](https://github.com/hjdhnx/drpy-plugin)
 * [drpy2打包项目](https://github.com/hjdhnx/drpy-webpack)
 * [在线猫ds源主页](/cat/index.html)
 

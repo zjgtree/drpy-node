@@ -10,6 +10,9 @@
 4. 新增环境变量参数说明文档 [DS项目环境变量说明](/docs/envdoc.md)
 5. 守护进程启动时的空链接error降级为warning
 
+特殊说明: 可以从 [这里](https://github.com/hjdhnx/drpy-node/releases/tag/binary-0825) 下载binary二进制解压到根目录。
+安卓端termux可以直接用，宝盒和装逼壳等壳子需要用自定义插件方式运行(目录注意改一下如binary1不然安termux方式用会导致无法启动服务)
+
 ### 20250824
 
 更新至V1.2.19
