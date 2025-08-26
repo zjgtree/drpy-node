@@ -1,3 +1,13 @@
+"""
+@header({
+  searchable: 1,
+  filterable: 1,
+  quickSearch: 1,
+  title: 'getapp3.4.4',
+  lang: 'hipy'
+})
+"""
+
 # coding = utf-8
 # !/usr/bin/python
 # 新时代青年 2025.06.25 getApp第三版

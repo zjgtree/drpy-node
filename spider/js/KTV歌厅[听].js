@@ -4,11 +4,12 @@
   filterable: 1,
   quickSearch: 0,
   title: 'KTV歌厅[听]',
-  lang: 'dr2'
+  logo: 'https://bizaladdin-image.baidu.com/0/pic/-904282954_-371572977_15521219.png',
+  lang: 'ds'
 })
 */
 
-globalThis.post2 = function (_url, _data) {
+post2 = function (_url, _data) {
     // let data = buildUrl(_url,_data).split('?')[1];
     // return post(_url,{body:encodeURIComponent(data),headers:rule.headers});
     return post(_url, {data: _data, headers: rule.headers});
@@ -19,7 +20,8 @@ var rule = {
     // host: 'https://vpsdn.leuse.top',
     host: 'https://api.cloudflare.com',
     root: 'https://api.cloudflare.com/client/v4/accounts/1ecc4a947c5a518427141f4a68c86ea1/d1/database/4f1385ab-f952-404a-870a-e4cfef4bd9fd/query',
-    mktvUrl: 'http://txysong.mysoto.cc/songs/',
+    // mktvUrl: 'http://txysong.mysoto.cc/songs/',
+    mktvUrl: 'http://em.21dtv.com/songs/',
     url: '/searchmv?table=fyclass&pg=fypage#fyfilter',
     searchUrl: '/searchmv?keywords=**&pg=fypage',
     pic: 'https://api.paugram.com/wallpaper/?source=sina&category=us',
@@ -36,27 +38,27 @@ var rule = {
     timeout: 5000,
     class_name: '歌手&曲库',
     class_url: 'singer&song',
-    一级: $js.toString(() => {
+
+    一级: async function () {
+        let {MY_FL, MY_CATE, MY_PAGE} = this;
         let d = [];
-        // let _url = input.split('#')[0];
         let _url = rule.root;
         let params = [];
         let sql = '';
         let size = 20;
         let pg = MY_PAGE;
+
         if (MY_CATE === 'singer') {
             sql = 'select name, id from singer where 1=1';
             if (MY_FL.region) {
                 params.push(MY_FL.region);
-                sql += ' and region_id = ?';
-                // _url += '&where=region_id&keywords=' + MY_FL.region + '&size=21';
+                sql += ` and region_id =?`;
             } else if (MY_FL.form) {
                 params.push(MY_FL.form);
-                sql += ' and form_id = ?';
-                // _url += '&where=form_id&keywords=' + MY_FL.form + '&size=21';
+                sql += ` and form_id =?`;
             }
-            sql += ` order by id limit ${(pg - 1) * size},${size};`;
-            let html = post2(_url, {params: params, sql: sql});
+            sql += ` order by id limit ${(pg - 1) * size},${size}`;
+            let html = await post2(_url, {params: params, sql: sql});
             let json = JSON.parse(html);
             d = json.result[0].results.map(item => {
                 let pic = rule.mktvUrl + item.id + '.jpg';
@@ -64,66 +66,75 @@ var rule = {
                     vod_id: item.name + '@@' + item.name + '@@' + pic,
                     vod_name: item.name,
                     vod_pic: pic,
-                    vod_remarks: '',
-                }
+                    vod_remarks: ''
+                };
             });
         } else if (MY_CATE === 'song') {
             sql = 'select number, name from song where 1=1';
             if (MY_FL.lan) {
                 params.push(MY_FL.lan);
-                sql += ' and language_id = ?';
-                // _url += '&where=language_id&keywords=' + MY_FL.lan + '&size=21';
+                sql += ` and language_id =?`;
             } else if (MY_FL.type) {
                 params.push(MY_FL.type);
-                sql += ' and type_id = ?';
-                // _url += '&where=type_id&keywords=' + MY_FL.type + '&size=21';
+                sql += ` and type_id =?`;
             }
-            sql += ` order by number limit ${(pg - 1) * size},${size};`;
-            let html = post2(_url, {params: params, sql: sql});
+            sql += ` order by number limit ${(pg - 1) * size},${size}`;
+            let html = await post2(_url, {params: params, sql: sql});
             let json = JSON.parse(html);
             d = json.result[0].results.map(item => {
                 return {
                     vod_id: rule.mktvUrl + item.number + '.mkv' + '@@' + item.name + '@@' + '',
                     vod_name: item.name,
                     vod_pic: rule.pic,
-                    vod_remarks: '',
-                }
+                    vod_remarks: ''
+                };
             });
         }
-        VODS = d;
-    }),
-    二级: $js.toString(() => {
+
+        return d;
+    },
+
+
+    二级: async function () {
+        let {input, orId} = this;
+
         let _url = rule.root;
         let id = orId.split('@@')[0];
         let name = orId.split('@@')[1];
+        let VOD;
+
         if (id.endsWith('.mkv')) {
             VOD = {
                 vod_name: name,
                 vod_play_from: '道长在线',
-                vod_content: '道长在线',
-            }
+                vod_content: '道长在线'
+            };
         } else {
             VOD = {
                 vod_name: id,
                 vod_play_from: '道长在线',
-                vod_content: '道长在线',
-            }
+                vod_content: '道长在线'
+            };
         }
+
         if (id.endsWith('.mkv')) {
             VOD.vod_play_url = '嗅探播放$' + id;
         } else {
             let params = [id];
-            let sql = 'select number,name from song where singer_names = ? order by number limit 0,999';
-            let html = post2(_url, {params: params, sql: sql});
+            let sql = 'select number,name from song where singer_names =? order by number limit 0,999';
+            let html = await post2(_url, {params: params, sql: sql});
             let json = JSON.parse(html);
             let data = json.result[0].results;
 
-            VOD.vod_play_url = (data.map(item => {
+            VOD.vod_play_url = data.map(item => {
                 return item.name + '$' + rule.mktvUrl + item.number + '.mkv';
-            })).join('#');
+            }).join('#');
         }
-    }),
-    搜索: $js.toString(() => {
+
+        return VOD;
+    },
+    搜索: async function () {
+        let {input} = this;
         let _url = rule.root;
         let wd = KEY;
         let sql = "select number,name from song where name like '%" + wd + "%' or singer_names like '%" + wd + "%'";
@@ -138,10 +149,10 @@ var rule = {
                 vod_remarks: item.singer_names,
             }
         });
-        VODS = d;
-    }),
+        return setResult(d);
+    },
     play_parse: true,
-    lazy: $js.toString(() => {
+    lazy: async function () {
         input = {parse: 0, url: input};
-    }),
+    },
 }
