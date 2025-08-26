@@ -208,6 +208,8 @@ if (-not $pm2 -or -not $nodeExe) {
     Write-Host "已创建/更新每 24 小时更新任务：$taskUpdate" -ForegroundColor Yellow
 }
 
+# ------ 退出虚拟环境 ------
+deactivate
 # ---------- 完成 ----------
 $ip     = (ipconfig | Select-String "IPv4 地址" | Select-Object -First 1).ToString().Split(":")[-1].Trim()
 $public = (Invoke-RestMethod "https://ipinfo.io/ip")
