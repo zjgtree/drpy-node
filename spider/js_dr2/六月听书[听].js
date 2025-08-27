@@ -4,6 +4,7 @@
   filterable: 0,
   quickSearch: 0,
   title: '六月听书[听]',
+  logo: 'https://pic.xlhs.com/up/2021-11/2021112985176843.png',
   lang: 'dr2'
 })
 */

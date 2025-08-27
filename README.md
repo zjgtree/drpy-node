@@ -90,11 +90,11 @@ todo:
 
 * 终端执行
 
-`bash -c "$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)"`
+`bash -c "$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)"`
 
 * 添加定时方案
 
-`echo "30 7 * * * cd /patch && bash -c \"\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)\" >> /patch/drpyslog.log 2>&1" | crontab -`
+`echo "30 7 * * * cd /patch && bash -c \"\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)\" >> /patch/drpyslog.log 2>&1" | crontab -`
 
 或者下载脚本到本地后
 

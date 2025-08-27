@@ -3,7 +3,7 @@
   searchable: 1,
   filterable: 1,
   quickSearch: 1,
-  title: 'getapp3.4.1',
+  title: 'getapp3.4.2',
   lang: 'hipy'
 })
 """

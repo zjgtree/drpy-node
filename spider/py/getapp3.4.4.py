@@ -49,7 +49,7 @@ class Spider(BaseSpider):
             self.username = ext.get('username')
             self.password = ext.get('password')
         self.device_id = ext.get('devideid')
-        self.key = ext['datakey']
+        self.key = ext.get('datakey') or ext.get('key')
         self.iv = ext.get('dataiv', self.key)
         if self.device_id:
             self.header['app-user-device-id'] = self.device_id

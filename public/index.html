@@ -81,11 +81,11 @@
 <ul>
 <li>终端执行</li>
 </ul>
-<p><code>bash -c &quot;$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)&quot;</code></p>
+<p><code>bash -c &quot;$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)&quot;</code></p>
 <ul>
 <li>添加定时方案</li>
 </ul>
-<p><code>echo &quot;30 7 * * * cd /patch &amp;&amp; bash -c \&quot;\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)\&quot; &gt;&gt; /patch/drpyslog.log 2&gt;&amp;1&quot; | crontab -</code></p>
+<p><code>echo &quot;30 7 * * * cd /patch &amp;&amp; bash -c \&quot;\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)\&quot; &gt;&gt; /patch/drpyslog.log 2&gt;&amp;1&quot; | crontab -</code></p>
 <p>或者下载脚本到本地后</p>
 <p><code>chmod a+x /path/autorun.sh</code></p>
 <p><code>echo &quot;30 7 * * * bash /path/autorun.sh  &gt;&gt; /path/logfile.log 2&gt;&amp;1&quot; | crontab -</code></p>
