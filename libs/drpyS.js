@@ -1,19 +1,20 @@
 import {readFile} from 'fs/promises';
 import {existsSync, readFileSync, writeFileSync, mkdirSync} from 'fs';
 import {fileURLToPath} from "url";
-import {createRequire} from 'module';
 import {XMLHttpRequest} from 'xmlhttprequest';
+import WebSocket, {WebSocketServer} from 'ws';
 import path from "path";
 import vm from 'vm';
-import WebSocket, {WebSocketServer} from 'ws';
 import zlib from 'zlib';
 import JSONbig from 'json-bigint';
+import forge from "node-forge";
 import * as minizlib from 'minizlib';
-import '../libs_drpy/es6-extend.js'
-import {getSitesMap} from "../utils/sites-map.js";
 import * as utils from '../utils/utils.js';
 import * as misc from '../utils/misc.js';
 import COOKIE from '../utils/cookieManager.js';
+import AIS from '../utils/ais.js';
+import fileHeaderManager from "../utils/fileHeaderManager.js";
+import {getSitesMap} from "../utils/sites-map.js";
 import {ENV} from '../utils/env.js';
 import {Quark} from "../utils/quark.js";
 import {UC} from "../utils/uc.js";
@@ -21,55 +22,39 @@ import {Ali} from "../utils/ali.js";
 import {Cloud} from "../utils/cloud.js";
 import {Yun} from "../utils/yun.js";
 import {Pan} from "../utils/pan123.js";
-import AIS from '../utils/ais.js';
-// const { req } = await import('../utils/req.js');
-import {gbkTool} from '../libs_drpy/gbk.js'
-// import {atob, btoa, base64Encode, base64Decode, md5} from "../libs_drpy/crypto-util.js";
-import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
 import {getContentType, getMimeType} from "../utils/mime-type.js";
 import {getParsesDict} from "../utils/file.js";
 import {getFirstLetter} from "../utils/pinyin-tool.js";
+import {reqs} from "../utils/req.js";
 import "../utils/random-http-ua.js";
+import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
+import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
 import template from '../libs_drpy/template.js'
 import batchExecute from '../libs_drpy/batchExecute.js';
 import '../libs_drpy/abba.js'
-import '../libs_drpy/drpyInject.js'
-import '../libs_drpy/crypto-js.js';
 import '../libs_drpy/jsencrypt.js';
+import '../libs_drpy/gb18030.js';
+import '../libs_drpy/crypto-js.js';
 import '../libs_drpy/node-rsa.js';
 import '../libs_drpy/pako.min.js';
 import '../libs_drpy/json5.js'
 import '../libs_drpy/jinja.js'
-// import '../libs_drpy/jsonpathplus.min.js'
+import '../libs_drpy/drpyInject.js'
 import '../libs_drpy/drpyCustom.js'
-import '../libs_drpy/moduleLoader.js'
-// import '../libs_drpy/crypto-js-wasm.js'
+import '../libs_drpy/es6-extend.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const _data_path = path.join(__dirname, '../data');
 const _config_path = path.join(__dirname, '../config');
+const _lib_path = path.join(__dirname, '../spider/js');
 
-globalThis.misc = misc;
-globalThis.utils = utils;
-globalThis.COOKIE = COOKIE;
-globalThis.ENV = ENV;
+globalThis.JSONbig = JSONbig; // 抖音弹幕直播必须
 globalThis._ENV = process.env;
-globalThis.Quark = Quark;
-globalThis.UC = UC;
-globalThis.Ali = Ali;
-globalThis.Cloud = Cloud;
-globalThis.Yun = Yun;
-globalThis.Pan = Pan;
-globalThis.require = createRequire(import.meta.url);
 globalThis._fetch = fetch;
-globalThis.XMLHttpRequest = XMLHttpRequest;
-globalThis.WebSocket = WebSocket;
-globalThis.WebSocketServer = WebSocketServer;
-globalThis.zlib = zlib;
-globalThis.JSONbig = JSONbig;
 globalThis.JsonBig = JSONbig({storeAsString: true});
-globalThis.minizlib = minizlib;
-globalThis.AIS = AIS;
+globalThis.require = rootRequire;
+initializeGlobalDollar();
+
 globalThis.pathLib = {
     basename: path.basename,
     extname: path.extname,
@@ -106,6 +91,20 @@ globalThis.pathLib = {
             log(`failed for saveFile ${_file_path}　error:${e.message}`);
             return false
         }
+    },
+    readLib: function (filename) {
+        let _file_path = path.join(_lib_path, filename);
+        const resolvedPath = path.resolve(_data_path, _file_path); // 将路径解析为绝对路径
+        if (!resolvedPath.startsWith(_lib_path)) {
+            log(`no access for read ${_file_path}`)
+            return '';
+        }
+        // 检查文件是否存在
+        if (!existsSync(resolvedPath)) {
+            log(`file not found for read ${resolvedPath}`)
+            return '';
+        }
+        return readFileSync(resolvedPath, 'utf8')
     },
 };
 const {sleep, sleepSync, computeHash, deepCopy, urljoin, urljoin2, joinUrl, naturalSort, $js} = utils;
@@ -155,6 +154,7 @@ try {
 
 let simplecc = null;
 try {
+    // 尝试动态导入模块puppeteerHelper
     const simWasm = await import('simplecc-wasm');  // 使用动态 import
     simplecc = simWasm.simplecc;
     console.log('simplecc imported successfully');
@@ -206,7 +206,10 @@ export async function getSandbox(env = {}) {
         getProxyUrl,
         hostUrl,
         fServer,
-        getContentType, getMimeType, getParsesDict, getFirstLetter
+        getContentType,
+        getMimeType,
+        getParsesDict,
+        getFirstLetter
     };
     const drpySanbox = {
         jsp,
@@ -225,6 +228,7 @@ export async function getSandbox(env = {}) {
         aesX,
         desX,
         req,
+        reqs,
         _fetch,
         XMLHttpRequest,
         simplecc,
@@ -277,8 +281,10 @@ export async function getSandbox(env = {}) {
         buildUrl,
         keysToLowerCase,
         parseQueryString,
+        buildQueryString,
         encodeIfContainsSpecialChars,
         objectToQueryString,
+        forge
     };
 
     const libsSanbox = {
@@ -424,7 +430,7 @@ export async function init(filePath, env = {}, refresh) {
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
         // 执行文件内容，将其放入沙箱中
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         // console.log('js_code:', js_code.slice(5000));
         const js_code_wrapper = `
     _asyncGetRule  = (async function() {
@@ -514,10 +520,10 @@ export async function getRuleObject(filePath, env, refresh) {
                 return cached.ruleObject;
             }
         }
-        log(`Loading RuleObject: ${filePath} fileSize:${fileContent.length}`);
+        // log(`Loading RuleObject: ${filePath} fileSize:${fileContent.length}`);
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         const js_code_wrapper = `
     _asyncGetRule  = (async function() {
         ${js_code}
@@ -566,7 +572,7 @@ export async function initJx(filePath, env, refresh) {
         let t1 = utils.getNowTime();
         const {sandbox, context} = await getSandbox(env);
         // 执行文件内容，将其放入沙箱中
-        const js_code = getOriginalJs(fileContent);
+        const js_code = await getOriginalJs(fileContent);
         const js_code_wrapper = `
     _asyncGetLazy  = (async function() {
         ${js_code}
@@ -592,6 +598,15 @@ export async function initJx(filePath, env, refresh) {
     }
 }
 
+export async function isLoaded() {
+    if (jxCache && jxCache.size > 0) {
+        console.log('Map 不为空,已完成初始化');
+        return true;
+    } else {
+        console.log('Map 为空或未初始化');
+        return false;
+    }
+}
 
 /**
  * 使用临时的上下文调用异步方法，确保每次调用时的上下文 (this) 是独立的。
@@ -618,6 +633,7 @@ async function invokeWithInjectVars(rule, method, injectVars, args) {
         }
     });
     let result = {};
+    let ret_str = '';
     let error = null;
     try {
         result = await method.apply(thisProxy, args);
@@ -652,7 +668,8 @@ async function invokeWithInjectVars(rule, method, injectVars, args) {
             break;
         case 'lazy':
             result = await playParseAfter(rule, result, args[1], args[0]);
-            console.log(`免嗅 ${injectVars.input} 执行完毕,结果为:`, JSON.stringify(result));
+            ret_str = JSON.stringify(result);
+            console.log(`免嗅 ${injectVars.input} 执行完毕,结果为:`, ret_str.length < 100 ? ret_str : ret_str.slice(0, 100) + '...');
             break;
         case 'proxy_rule':
             break;
@@ -1007,6 +1024,23 @@ async function cateParse(rule, tid, pg, filter, extend) {
     } else if (pg > 1 && url.includes('[') && url.includes(']')) {
         url = url.split('[')[0];
     }
+    if (rule.filter_def && typeof (rule.filter_def) === 'object') {
+        try {
+            if (Object.keys(rule.filter_def).length > 0 && rule.filter_def.hasOwnProperty(tid)) {
+                let self_fl_def = rule.filter_def[tid];
+                if (self_fl_def && typeof (self_fl_def) === 'object') {
+                    let k = [Object.keys(self_fl_def)][0]
+                    k.forEach(k => {
+                        if (!extend.hasOwnProperty(k)) {
+                            extend[k] = self_fl_def[k];
+                        }
+                    })
+                }
+            }
+        } catch (e) {
+            log(`合并不同分类对应的默认筛选出错:${e.message}`);
+        }
+    }
     if (rule.filter_url) {
         if (!/fyfilter/.test(url)) {
             if (!url.endsWith('&') && !rule.filter_url.startsWith('&')) {
@@ -1297,7 +1331,7 @@ export async function homeVod(filePath, env) {
     });
 }
 
-export async function cate(filePath, env, tid, pg = 1, filter = 1, extend = {}) {
+export async function category(filePath, env, tid, pg = 1, filter = 1, extend = {}) {
     return await invokeMethod(filePath, env, '一级', [tid, pg, filter, extend], {
         input: '$.url',
         MY_URL: '$.url'
@@ -1380,11 +1414,14 @@ export async function getJx(filePath) {
  * 获取加密前的原始的js源文本
  * @param js_code
  */
-export function getOriginalJs(js_code) {
-    let current_match = /var rule|[\u4E00-\u9FA5]+|function|let |var |const |\(|\)|"|'/;
+export async function getOriginalJs(js_code) {
+    // let current_match = /var rule|[\u4E00-\u9FA5]+|function|let |var |const |\(|\)|"|'/;
+    let current_match = /var rule|function|let |var |const|class Rule|async|this\./;
     if (current_match.test(js_code)) {
         return js_code
     }
+    console.log('密文源自动去除头信息...');
+    js_code = await fileHeaderManager.removeHeader(js_code, {mode: 'top-comments', fileType: '.js'});
     let rsa_private_key = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCqin/jUpqM6+fgYP/oMqj9zcdHMM0mEZXLeTyixIJWP53lzJV2N2E3OP6BBpUmq2O1a9aLnTIbADBaTulTNiOnVGoNG58umBnupnbmmF8iARbDp2mTzdMMeEgLdrfXS6Y3VvazKYALP8EhEQykQVarexR78vRq7ltY3quXx7cgI0ROfZz5Sw3UOLQJ+VoWmwIxu9AMEZLVzFDQN93hzuzs3tNyHK6xspBGB7zGbwCg+TKi0JeqPDrXxYUpAz1cQ/MO+Da0WgvkXnvrry8NQROHejdLVOAslgr6vYthH9bKbsGyNY3H+P12kcxo9RAcVveONnZbcMyxjtF5dWblaernAgMBAAECggEAGdEHlSEPFmAr5PKqKrtoi6tYDHXdyHKHC5tZy4YV+Pp+a6gxxAiUJejx1hRqBcWSPYeKne35BM9dgn5JofgjI5SKzVsuGL6bxl3ayAOu+xXRHWM9f0t8NHoM5fdd0zC3g88dX3fb01geY2QSVtcxSJpEOpNH3twgZe6naT2pgiq1S4okpkpldJPo5GYWGKMCHSLnKGyhwS76gF8bTPLoay9Jxk70uv6BDUMlA4ICENjmsYtd3oirWwLwYMEJbSFMlyJvB7hjOjR/4RpT4FPnlSsIpuRtkCYXD4jdhxGlvpXREw97UF2wwnEUnfgiZJ2FT/MWmvGGoaV/CfboLsLZuQKBgQDTNZdJrs8dbijynHZuuRwvXvwC03GDpEJO6c1tbZ1s9wjRyOZjBbQFRjDgFeWs9/T1aNBLUrgsQL9c9nzgUziXjr1Nmu52I0Mwxi13Km/q3mT+aQfdgNdu6ojsI5apQQHnN/9yMhF6sNHg63YOpH+b+1bGRCtr1XubuLlumKKscwKBgQDOtQ2lQjMtwsqJmyiyRLiUOChtvQ5XI7B2mhKCGi8kZ+WEAbNQcmThPesVzW+puER6D4Ar4hgsh9gCeuTaOzbRfZ+RLn3Aksu2WJEzfs6UrGvm6DU1INn0z/tPYRAwPX7sxoZZGxqML/z+/yQdf2DREoPdClcDa2Lmf1KpHdB+vQKBgBXFCVHz7a8n4pqXG/HvrIMJdEpKRwH9lUQS/zSPPtGzaLpOzchZFyQQBwuh1imM6Te+VPHeldMh3VeUpGxux39/m+160adlnRBS7O7CdgSsZZZ/dusS06HAFNraFDZf1/VgJTk9BeYygX+AZYu+0tReBKSs9BjKSVJUqPBIVUQXAoGBAJcZ7J6oVMcXxHxwqoAeEhtvLcaCU9BJK36XQ/5M67ceJ72mjJC6/plUbNukMAMNyyi62gO6I9exearecRpB/OGIhjNXm99Ar59dAM9228X8gGfryLFMkWcO/fNZzb6lxXmJ6b2LPY3KqpMwqRLTAU/zy+ax30eFoWdDHYa4X6e1AoGAfa8asVGOJ8GL9dlWufEeFkDEDKO9ww5GdnpN+wqLwePWqeJhWCHad7bge6SnlylJp5aZXl1+YaBTtOskC4Whq9TP2J+dNIgxsaF5EFZQJr8Xv+lY9lu0CruYOh9nTNF9x3nubxJgaSid/7yRPfAGnsJRiknB5bsrCvgsFQFjJVs=';
     let decode_content = '';
 
@@ -1535,4 +1572,68 @@ export async function runMain(main_func_code, arg) {
         log(`执行main_func_code发生了错误:${e.message}`);
         return ''
     }
+}
+
+// 清理缓存函数  
+export function clearAllCache() {
+    const excludeList = ['APP模板配置'];
+    let clearedCount = 0;
+
+    // 清理moduleCache，跳过排除列表中的模块  
+    for (const [key, value] of moduleCache.entries()) {
+        let shouldSkip = false;
+
+        // 检查是否在排除列表中  
+        for (const excludeName of excludeList) {
+            if (value.moduleObject && value.moduleObject.title &&
+                value.moduleObject.title.includes(excludeName)) {
+                console.log(`跳过清理模块缓存: ${value.moduleObject.title}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            moduleCache.delete(key);
+            clearedCount++;
+        }
+    }
+
+    // 清理ruleObjectCache，跳过排除列表中的模块  
+    for (const [filePath, value] of ruleObjectCache.entries()) {
+        let shouldSkip = false;
+
+        for (const excludeName of excludeList) {
+            if (filePath.includes(excludeName)) {
+                console.log(`跳过清理规则缓存: ${filePath}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            ruleObjectCache.delete(filePath);
+            clearedCount++;
+        }
+    }
+
+    // 清理jxCache，跳过排除列表中的模块  
+    for (const [key, value] of jxCache.entries()) {
+        let shouldSkip = false;
+
+        for (const excludeName of excludeList) {
+            if (key.includes(excludeName)) {
+                console.log(`跳过清理解析缓存: ${key}`);
+                shouldSkip = true;
+                break;
+            }
+        }
+
+        if (!shouldSkip) {
+            jxCache.delete(key);
+            clearedCount++;
+        }
+    }
+
+    console.log(`已清理 ${clearedCount} 个模块缓存，排除了 ${excludeList.join(', ')} 相关缓存`);
 }

@@ -3,6 +3,8 @@ import {readdirSync, readFileSync, writeFileSync, existsSync} from 'fs';
 import '../utils/marked.min.js';
 import {computeHash} from '../utils/utils.js';
 import {validateBasicAuth} from "../utils/api_validate.js";
+import {daemon} from "../utils/daemonManager.js";
+import {toBeijingTime} from "../utils/datetime-format.js"
 
 export default (fastify, options, done) => {
     // 添加 / 接口
@@ -32,7 +34,7 @@ export default (fastify, options, done) => {
         const markdownContent = readFileSync(readmePath, 'utf-8');
 
         // 将 Markdown 转换为 HTML
-        const htmlContent = marked.parse(markdownContent);
+        const htmlContent = marked.parse(markdownContent).replaceAll('$pwd', process.env.API_PWD || '');
         const indexHtml = `
                 <!DOCTYPE html>
                 <html lang="en">
@@ -107,6 +109,18 @@ export default (fastify, options, done) => {
         } catch (error) {
             reply.status(500).send({error: 'Failed to fetch cat', details: error.message});
         }
+    });
+
+    // 健康检查端点
+    fastify.get('/health', async (request, reply) => {
+        return {
+            status: 'ok',
+            timestamp: toBeijingTime(new Date()),
+            python: {
+                available: await daemon.isPythonAvailable(),
+                daemon_running: daemon.isDaemonRunning()
+            }
+        };
     });
     done();
 };

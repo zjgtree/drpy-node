@@ -8,63 +8,39 @@
                 </head>
                 <body>
                     <h1 id="drpysdrpy-node">drpyS(drpy-node)</h1>
-<p>nodejs作为服务端的drpy实现。全面升级异步写法<br><del>积极开发中，每日一更</del>，当前进度 <code>49%</code><br>找工作中，随缘更新</p>
+<p>nodejs作为服务端的drpy实现。全面升级异步写法<br><del>积极开发中，每日一更</del>，当前进度 <code>86%</code><br><del>找工作中，随缘更新</del><br>上班当牛马，下班要带娃，阶段性佛系趁娃睡觉熬夜更新</p>
 <ul>
-<li><a href="/config?pwd=">本地配置接口-动态本地</a></li>
-<li><a href="/config/1?pwd=">本地配置接口-动态外网/局域网</a></li>
+<li><a href="docs/apidoc.md">接口文档</a> | <a href="docs/apiList.md">接口列表如定时任务</a> | <a href="https://github.com/waifu-project/movie/pull/135">小猫影视-待对接T4</a></li>
+<li><a href="/config?pwd=dzyyds">本地配置接口-动态本地</a></li>
+<li><a href="/config/1?pwd=dzyyds">本地配置接口-动态外网/局域网</a></li>
 <li><a href="/docs/sub.md">其他配置接口-订阅过滤</a></li>
+<li><a href="/docs/pyenv.md">python环境</a> | <a href="/docs/envdoc.md">DS项目环境变量说明</a></li>
+<li><a href="/docs/catDebug.md">猫源调试教程</a></li>
 <li><a href="/admin/encoder">代码加解密工具</a></li>
 <li><a href="/authcoder?len=10&amp;number=1">V我50支付凭证生成器</a></li>
 <li><a href="/docs/httpTest.md">接口压测教程</a></li>
 <li><a href="/proxy/%E5%A4%AE%E8%A7%86%E5%A4%A7%E5%85%A8%5B%E5%AE%98%5D/index.html">央视点播解析工具</a></li>
 <li><a href="/apps/cookie-butler/index.html">cookie管理插件</a></li>
+<li><a href="/apps/cron-generator/index.html">cron表达式插件</a></li>
 <li><a href="/robots.txt">本站防止爬虫协议</a></li>
 <li><a href="https://git-proxy.playdreamer.cn/hjdhnx/drpy-node">本项目主页-免翻</a></li>
 <li><a href="https://github.com/hjdhnx/CatPawOpen/tree/ds-cat">DS源适配猫影视</a></li>
+<li><a href="https://github.com/hjdhnx/drpy-plugin">DS插件项目-golang</a></li>
+<li><a href="https://github.com/hjdhnx/drpy-webpack">drpy2打包项目</a></li>
 <li><a href="/cat/index.html">在线猫ds源主页</a></li>
 </ul>
 <h2 id="更新记录">更新记录</h2>
-<h3 id="20250310">20250310</h3>
-<p>更新至V1.1.23</p>
-<h3 id="20250227">20250227</h3>
-<p>更新至V1.1.22</p>
-<h3 id="20250226">20250226</h3>
-<p>更新至V1.1.21</p>
-<h3 id="20250225">20250225</h3>
-<p>更新至V1.1.20</p>
-<h3 id="20250224">20250224</h3>
-<p>更新至V1.1.19</p>
-<h3 id="20250211">20250211</h3>
-<p>更新至V1.1.18</p>
-<h3 id="20250206">20250206</h3>
-<p>更新至V1.1.17</p>
-<h3 id="20250123">20250123</h3>
-<p>更新至V1.1.16</p>
-<h3 id="20250122">20250122</h3>
-<p>更新至V1.1.15</p>
-<ol>
-<li>ds源和dr2源增加装逼壳图标支持</li>
-</ol>
-<h3 id="20250121">20250121</h3>
-<p>更新至V1.1.14</p>
-<ol>
-<li>猫源ds在线配置支持接口密码</li>
-<li>新增源</li>
-<li>磁盘加速</li>
-</ol>
-<h3 id="20250120">20250120</h3>
-<p>更新至V1.1.13</p>
-<ol>
-<li>完善猫在线配置</li>
-</ol>
-<h3 id="20250117">20250117</h3>
-<p>本次未更新版本</p>
-<ol>
-<li>新开项目，使ds源适用于新版猫影视 <a href="https://github.com/CatPawApp/CatPawOpen">猫爪catpwd</a></li>
-</ol>
+<h3 id="20250825">20250825</h3>
+<p>更新至V1.2.20</p>
+<h3 id="20250824">20250824</h3>
+<p>更新至V1.2.19</p>
+<h3 id="20250823">20250823</h3>
+<p>更新至V1.2.18</p>
+<h3 id="20250822">20250822</h3>
 <p><a href="docs/updateRecord.md">点此查看完整更新记录</a></p>
 <p><strong>注意事项</strong></p>
-<p>总是有人遇到各种奇葩问题，像什么没弹幕，访问/config/1服务马上崩溃等等，能自行解决最好，解决不了我建议你使用下方安装教程 <code>3.道长腾讯轻量云服务器安装方案</code>
+<p>总是有人遇到各种奇葩问题，像什么没弹幕，访问/config/1服务马上崩溃等等，能自行解决最好，解决不了我建议你使用下方安装教程
+<code>3.道长腾讯轻量云服务器安装方案</code>
 跟我一样还有问题那就不可能了，我能用你即能用</p>
 <h2 id="基础框架">基础框架</h2>
 <p>todo:</p>
@@ -88,10 +64,13 @@
 <li><a href="docs/pupInstall.md">puppeteer使用教程</a></li>
 <li><a href="docs/ruleAttr.md">drpyS源属性说明</a></li>
 <li><a href="docs/ruleDesc.md">drpy2写源简述</a></li>
+<li><a href="docs/suanfa.md">关姐算法搭建说明</a></li>
 </ul>
 <h2 id="问题说明">问题说明</h2>
 <ol>
 <li>windows上直接运行index.js可能会发现运行过程中的日志打印出中文乱码。建议通过yarn dev运行或者在package.json里点击dev脚本运行</li>
+<li><code>pinyin</code> 库依赖的 <code>nodejieba</code> 跑路了现在无法完成安装</li>
+<li><code>new Promise</code> 里发生的错误无法被外部try catch 导致程序崩溃，如 <code>番薯动漫.js</code> 里的写法</li>
 </ol>
 <h2 id="安装说明">安装说明</h2>
 <p>1.zy安装方案</p>
@@ -102,11 +81,11 @@
 <ul>
 <li>终端执行</li>
 </ul>
-<p><code>bash -c &quot;$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)&quot;</code></p>
+<p><code>bash -c &quot;$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)&quot;</code></p>
 <ul>
 <li>添加定时方案</li>
 </ul>
-<p><code>echo &quot;30 7 * * * cd /patch &amp;&amp; bash -c \&quot;\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/autorun.sh)\&quot; &gt;&gt; /patch/drpyslog.log 2&gt;&amp;1&quot; | crontab -</code></p>
+<p><code>echo &quot;30 7 * * * cd /patch &amp;&amp; bash -c \&quot;\$(curl -fsSLk https://git-proxy.playdreamer.cn/hjdhnx/drpy-node/raw/refs/heads/main/install/autorun.sh)\&quot; &gt;&gt; /patch/drpyslog.log 2&gt;&amp;1&quot; | crontab -</code></p>
 <p>或者下载脚本到本地后</p>
 <p><code>chmod a+x /path/autorun.sh</code></p>
 <p><code>echo &quot;30 7 * * * bash /path/autorun.sh  &gt;&gt; /path/logfile.log 2&gt;&amp;1&quot; | crontab -</code></p>

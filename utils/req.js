@@ -7,4 +7,10 @@ const req = _axios.create({
     httpAgent: new http.Agent({keepAlive: true}),
 });
 
+export const reqs = new _axios.create({
+    httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+    })
+});
+
 export default req;

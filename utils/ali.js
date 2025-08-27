@@ -37,7 +37,7 @@ class AliDrive {
             let now = Math.floor(Date.now() / 1000)
             if (exp.exp < now) {
                 this.oauth.access_token = null
-                console.log('阿里ali_refresh_token已过期')
+                console.log('阿里ali_refresh_token已过期,重新获取阿里ali_refresh_token')
             } else {
                 this.oauth.access_token = this.ali_refresh_token
                 console.log('阿里ali_refresh_token未过期，继续使用,可使用时间截止到：' + (new Date(exp.exp * 1000)).toLocaleString())

@@ -64,7 +64,7 @@ class UCHandler {
         return null;
     }
 
-    async initQuark(db, cfg) {
+    async initUC(db, cfg) {
         if (this.cookie) {
             console.log("cookie 获取成功");
         } else {
@@ -468,7 +468,7 @@ class UCHandler {
                     'x-pan-client-id': this.conf.clientID
                 }
             }
-            let req = await axios.request(config);
+            let req = await axios.request(config).catch((err) => err.response);
             if (req.status === 200) {
                 let videoInfo = req.data.data.video_info
                 videoInfo.forEach((item) => {
@@ -479,13 +479,44 @@ class UCHandler {
                 })
                 return video;
             }
+            if(req.data.status === -1 || req.data.errno === 10001){
+                let data = JSON.stringify({
+                    "req_id": reqId,
+                    "app_ver": this.conf.appVer,
+                    "device_id": deviceID,
+                    "device_brand": "OPPO",
+                    "platform": "tv",
+                    "device_name": "PCRT00",
+                    "device_model": "PCRT00",
+                    "build_device": "aosp",
+                    "build_product": "PCRT00",
+                    "device_gpu": "Adreno%20(TM)%20640",
+                    "activity_rect": "%7B%7D",
+                    "channel": this.conf.channel,
+                    "refresh_token": this.token
+                });
+                let config = {
+                    method: 'POST',
+                    url: 'http://api.extscreen.com/ucdrive/token',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Linux; U; Android 7.1.2; zh-cn; PCRT00 Build/N2G47O) AppleWebKit/533.1 (KHTML, like Gecko) Mobile Safari/533.1',
+                        'Connection': 'Keep-Alive',
+                        'Accept-Encoding': 'gzip',
+                        'Content-Type': 'application/json',
+                        'Cookie': 'sl-session=VIaxTAKF8mdJBhU2uda0zA=='
+                    },
+                    data: data
+                };
+                let req = await axios.request(config);
+                if(req.status === 200) {
+                    ENV.set('uc_token_cookie',req.data.data.refresh_token)
+                    return await this.getDownload(shareId, stoken, fileId, fileToken, clean)
+                }
+            }
         } else {
             const down = await this.api(`file/download?${this.pr}`, {
-
                 fids: [this.saveFileIdCaches[fileId]],
-
             });
-
             if (down.data) {
                 const low_url = down.data[0].download_url;
                 const low_cookie = this.cookie;
@@ -506,21 +537,17 @@ class UCHandler {
                 }
                 return down.data[0];
             }
-
-
         }
-
         return null;
-
     }
 
     async getLazyResult(downCache, mediaProxyUrl) {
         const urls = [];
-
-        downCache.forEach((it) => {
-            urls.push(it.name, it.url);
-        });
-
+        if (Array.isArray(downCache)) {
+            downCache.forEach((it) => {
+                urls.push(it.name, it.url);
+            });
+        }
         return {parse: 0, url: urls}
 
         /*

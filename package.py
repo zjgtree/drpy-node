@@ -4,10 +4,13 @@ import argparse
 import re
 
 # 要排除的目录列表
-EXCLUDE_DIRS = ['.git', '.idea', 'soft', 'pyTools', 'drop_code', 'jstest', 'local', 'logs', '对话1.txt','vod_cache','data/mv']
+EXCLUDE_DIRS = ['.git', '.idea', 'soft', 'binary', 'pyTools', 'drop_code', 'jstest', 'local', 'logs', '对话1.txt',
+                'vod_cache', 'data/mv']
 
 # 要排除的文件列表
-EXCLUDE_FILES = ['config/env.json', '.env','js/UC分享.js','js/百忙无果[官].js','json/UC分享.json','jx/奇奇.js','jx/芒果关姐.js','data/settings/link_data.json','index.json','custom.json']
+EXCLUDE_FILES = ['config/env.json', '.env', 'spider/js/UC分享.js', 'spider/js/百忙无果[官].js', 'json/UC分享.json',
+                 'jx/奇奇.js', 'jx/芒果关姐.js', 'data/settings/link_data.json', 'index.json', 'custom.json']
+
 
 def get_script_dir():
     """
@@ -15,11 +18,12 @@ def get_script_dir():
     """
     return os.path.dirname(os.path.abspath(__file__))
 
+
 def filter_green_files(script_dir):
     """
     筛选 js 目录下所有带 [密] 的文件
     """
-    js_dir = os.path.join(script_dir, 'js')
+    js_dir = os.path.join(script_dir, 'spider/js')
     green_files = []
 
     if os.path.exists(js_dir):
@@ -29,6 +33,7 @@ def filter_green_files(script_dir):
                     green_files.append(os.path.relpath(os.path.join(root, file), script_dir))
 
     return green_files
+
 
 def compress_directory(script_dir, green=False):
     # 获取当前目录名
@@ -79,6 +84,7 @@ def compress_directory(script_dir, green=False):
         print(f"压缩完成: {archive_path}")
     except Exception as e:
         print(f"压缩失败: {e}")
+
 
 if __name__ == "__main__":
     # 获取脚本所在目录

@@ -685,6 +685,27 @@ function $require(url) {
     eval(request(url));
 }
 
+//对象To字符串query
+globalThis.buildQueryString = function (params) {
+    const queryArray = [];
+    for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+            // 处理参数值：兼容null、undefined，转为字符串并编码
+            let value = params[key];
+            if (value === undefined || value === null) {
+                value = "";
+            } else {
+                value = value.toString();
+            }
+            // 编码键值（兼容ES5）
+            const encodedKey = encodeURIComponent(key);
+            const encodedValue = encodeURIComponent(value);
+            queryArray.push(encodedKey + "=" + encodedValue);
+        }
+    }
+    return queryArray.join("&");
+}
+
 //字符串To对象
 globalThis.parseQueryString = function (query) {
     const params = {};
@@ -724,3 +745,4 @@ globalThis.objectToQueryString = function (obj) {
     }
     return encoded.join('&');
 }
+globalThis.parseTags = parseTags;

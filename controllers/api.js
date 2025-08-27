@@ -1,11 +1,27 @@
 import path from 'path';
 import {existsSync} from 'fs';
 import {base64Decode} from '../libs_drpy/crypto-util.js';
-import * as drpy from '../libs/drpyS.js';
 import {ENV} from "../utils/env.js";
 import {validatePwd} from "../utils/api_validate.js";
+import {startJsonWatcher, getApiEngine} from "../utils/api_helper.js";
+import * as drpyS from '../libs/drpyS.js';
+import drpy2 from '../libs/drpy2.js';
+import hipy from '../libs/hipy.js';
+import xbpq from '../libs/xbpq.js';
+import catvod from '../libs/catvod.js';
+
+const ENGINES = {
+    drpyS,
+    drpy2,
+    hipy,
+    xbpq,
+    catvod,
+};
 
 export default (fastify, options, done) => {
+    // 启动JSON监听  
+    startJsonWatcher(ENGINES, options.jsonDir);
+
     // 动态加载模块并根据 query 执行不同逻辑
     fastify.route({
         method: ['GET', 'POST'], // 同时支持 GET 和 POST
@@ -16,22 +32,19 @@ export default (fastify, options, done) => {
         },
         handler: async (request, reply) => {
             const moduleName = request.params.module;
-            const modulePath = path.join(options.jsDir, `${moduleName}.js`);
+            const method = request.method.toUpperCase();
+            // 根据请求方法选择参数来源
+            const query = method === 'GET' ? request.query : request.body;
+            let {apiEngine, moduleDir, _ext, modulePath} = getApiEngine(ENGINES, moduleName, query, options);
             if (!existsSync(modulePath)) {
                 reply.status(404).send({error: `Module ${moduleName} not found`});
                 return;
             }
-            const method = request.method.toUpperCase();
-            // 根据请求方法选择参数来源
-            const query = method === 'GET' ? request.query : request.body;
+
             const moduleExt = query.extend || '';
             // console.log('moduleExt:', typeof moduleExt, moduleExt);
-            const protocol = request.protocol;
+            const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
             const hostname = request.hostname;
-            // const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/api/', '/proxy/') + '/?do=js';
-            // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
-            // console.log('proxyUrl:', proxyUrl);
-
             const publicUrl = `${protocol}://${hostname}/public/`;
             const jsonUrl = `${protocol}://${hostname}/json/`;
             const httpUrl = `${protocol}://${hostname}/http`;
@@ -41,7 +54,7 @@ export default (fastify, options, done) => {
 
             // console.log(`proxyUrl:${proxyUrl}`);
             function getEnv(moduleName) {
-                const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
+                const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=${query.do||'ds'}`;
                 const getProxyUrl = function () {
                     return proxyUrl
                 };
@@ -61,12 +74,12 @@ export default (fastify, options, done) => {
 
             const env = getEnv(moduleName);
             env.getRule = async function (_moduleName) {
-                const _modulePath = path.join(options.jsDir, `${_moduleName}.js`);
+                const _modulePath = path.join(moduleDir, `${_moduleName}${_ext}`);
                 if (!existsSync(_modulePath)) {
                     return null;
                 }
                 const _env = getEnv(_moduleName);
-                const RULE = await drpy.getRule(_modulePath, _env);
+                const RULE = await apiEngine.getRule(_modulePath, _env);
                 RULE.callRuleFn = async function (_method, _args) {
                     let invokeMethod = null;
                     switch (_method) {
@@ -77,7 +90,7 @@ export default (fastify, options, done) => {
                             invokeMethod = 'homeVod';
                             break;
                         case '一级':
-                            invokeMethod = 'cate';
+                            invokeMethod = 'category';
                             break;
                         case '二级':
                             invokeMethod = 'detail';
@@ -102,7 +115,7 @@ export default (fastify, options, done) => {
                             return await RULE[_method]
                         }
                     }
-                    return await drpy[invokeMethod](_modulePath, _env, ..._args)
+                    return await apiEngine[invokeMethod](_modulePath, _env, ..._args)
                 };
                 return RULE
             };
@@ -112,7 +125,7 @@ export default (fastify, options, done) => {
                 if ('play' in query) {
                     // 处理播放逻辑
                     // console.log('play query:', query);
-                    const result = await drpy.play(modulePath, env, query.flag, query.play);
+                    const result = await apiEngine.play(modulePath, env, query.flag, query.play);
                     return reply.send(result);
                 }
 
@@ -128,7 +141,7 @@ export default (fastify, options, done) => {
                         }
                     }
                     // 分类逻辑
-                    const result = await drpy.cate(modulePath, env, query.t, pg, 1, extend);
+                    const result = await apiEngine.category(modulePath, env, query.t, pg, 1, extend);
                     return reply.send(result);
                 }
 
@@ -137,13 +150,13 @@ export default (fastify, options, done) => {
                         fastify.log.info(`[${moduleName}] 二级已接收post数据: ${query.ids}`);
                     }
                     // 详情逻辑
-                    const result = await drpy.detail(modulePath, env, query.ids.split(','));
+                    const result = await apiEngine.detail(modulePath, env, query.ids.split(','));
                     return reply.send(result);
                 }
 
                 if ('ac' in query && 'action' in query) {
                     // 处理动作逻辑
-                    const result = await drpy.action(modulePath, env, query.action, query.value);
+                    const result = await apiEngine.action(modulePath, env, query.action, query.value);
                     return reply.send(result);
                 }
 
@@ -151,13 +164,13 @@ export default (fastify, options, done) => {
                 if ('wd' in query) {
                     // 搜索逻辑
                     const quick = 'quick' in query ? query.quick : 0;
-                    const result = await drpy.search(modulePath, env, query.wd, quick, pg);
+                    const result = await apiEngine.search(modulePath, env, query.wd, quick, pg);
                     return reply.send(result);
                 }
 
                 if ('refresh' in query) {
                     // 强制刷新初始化逻辑
-                    const refreshedObject = await drpy.init(modulePath, env, true);
+                    const refreshedObject = await apiEngine.init(modulePath, env, true);
                     return reply.send(refreshedObject);
                 }
                 if (!('filter' in query)) {
@@ -165,12 +178,13 @@ export default (fastify, options, done) => {
                 }
                 // 默认逻辑，返回 home + homeVod 接口
                 const filter = 'filter' in query ? query.filter : 1;
-                const resultHome = await drpy.home(modulePath, env, filter);
-                const resultHomeVod = await drpy.homeVod(modulePath, env);
+                const resultHome = await apiEngine.home(modulePath, env, filter);
+                const resultHomeVod = await apiEngine.homeVod(modulePath, env);
                 let result = {
                     ...resultHome,
                     // list: resultHomeVod,
                 };
+                // console.log('resultHomeVod:',resultHomeVod);
                 if (Array.isArray(resultHomeVod) && resultHomeVod.length > 0) {
                     Object.assign(result, {list: resultHomeVod})
                 }
@@ -190,7 +204,9 @@ export default (fastify, options, done) => {
     fastify.get('/proxy/:module/*', async (request, reply) => {
         const moduleName = request.params.module;
         const query = request.query; // 获取 query 参数
-        const modulePath = path.join(options.jsDir, `${moduleName}.js`);
+        // console.log(query);
+        let {apiEngine, modulePath} = getApiEngine(ENGINES, moduleName, query, options);
+        // console.log(modulePath);
         if (!existsSync(modulePath)) {
             reply.status(404).send({error: `Module ${moduleName} not found`});
             return;
@@ -200,7 +216,7 @@ export default (fastify, options, done) => {
         const rangeHeader = request.headers.range; // 获取客户端的 Range 请求头
 
         const moduleExt = query.extend || '';
-        const protocol = request.protocol;
+        const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
         const hostname = request.hostname;
 
         const publicUrl = `${protocol}://${hostname}/public/`;
@@ -211,7 +227,7 @@ export default (fastify, options, done) => {
         const fServer = fastify.server;
 
         function getEnv(moduleName) {
-            const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
+            const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=${query.do||'ds'}`;
             const getProxyUrl = function () {
                 return proxyUrl
             };
@@ -232,7 +248,7 @@ export default (fastify, options, done) => {
 
         const env = getEnv(moduleName);
         try {
-            const backRespList = await drpy.proxy(modulePath, env, query);
+            const backRespList = await apiEngine.proxy(modulePath, env, query);
             const statusCode = backRespList[0];
             const mediaType = backRespList[1] || 'application/octet-stream';
             let content = backRespList[2] || '';
@@ -305,7 +321,7 @@ export default (fastify, options, done) => {
             return reply.status(404).send({error: `解析 ${jxName} not found`});
         }
         const moduleExt = query.extend || '';
-        const protocol = request.protocol;
+        const protocol = request.headers['x-forwarded-proto'] || (request.socket.encrypted ? 'https' : 'http');
         const hostname = request.hostname;
 
         const publicUrl = `${protocol}://${hostname}/public/`;
@@ -316,8 +332,7 @@ export default (fastify, options, done) => {
         const fServer = fastify.server;
 
         function getEnv(moduleName) {
-            // const proxyUrl = `${protocol}://${hostname}/proxy/${moduleName}/?do=js`;
-            const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/parse/', '/proxy/') + '/?do=js';
+            const proxyUrl = `${protocol}://${hostname}${request.url}`.split('?')[0].replace('/parse/', '/proxy/') + `/?do=${query.do||"ds"}`;
             const getProxyUrl = function () {
                 return proxyUrl
             };
@@ -337,7 +352,7 @@ export default (fastify, options, done) => {
 
         const env = getEnv('');
         try {
-            const backResp = await drpy.jx(jxPath, env, query);
+            const backResp = await drpyS.jx(jxPath, env, query);
             const statusCode = 200;
             const mediaType = 'application/json; charset=utf-8';
             if (typeof backResp === 'object') {
