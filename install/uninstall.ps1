@@ -219,7 +219,13 @@ try {
     Write-Warning "清理 PM2 数据失败: $($_.Exception.Message)"
 }
 
-# ---------- 9. 完成 ----------
+# ---------- 9. 删除配置文件（当前目录） ----------
+Write-Host "删除配置文件..." -ForegroundColor Green
+$confFile  = Join-Path $PSScriptRoot "drpys-update.conf"
+$pathFile  = Join-Path $PSScriptRoot "drpys-path.txt"
+Remove-Item -Path $confFile,$pathFile -Force -ErrorAction SilentlyContinue
+
+# ---------- 10. 完成 ----------
 Write-Host "drpys 卸载完成！" -ForegroundColor Green
 if ($IncludeEnv) {
     Write-Host "已卸载所有运行环境，建议重启计算机。" -ForegroundColor Yellow
