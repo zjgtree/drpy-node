@@ -95,6 +95,11 @@ fastify.addHook('onRequest', async (req, reply) => {
     // 如果需要，可以在这里对 req.query 进行进一步处理
 });
 
+process.on("uncaughtException", (err) => {
+    console.error("未捕获异常:", err);
+    // 不退出，让主进程继续跑
+});
+
 process.on('unhandledRejection', (err) => {
     fastify.log.error(`未处理的Promise拒绝:${err.message}`);
     console.log(`发生了致命的错误，已阻止进程崩溃。${err.stack}`);

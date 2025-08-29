@@ -479,6 +479,7 @@ def run():
         _manager.stop()
         # 让 serve_forever() 退出
         srv.shutdown()
+        logger.info("The service has successfully exited")
         sys.exit(0)  # 保证退出码是 0
 
     if os.name == "posix":
