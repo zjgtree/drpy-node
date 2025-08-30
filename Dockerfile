@@ -14,9 +14,6 @@ WORKDIR /app
 # 克隆GitHub仓库到工作目录
 RUN git clone https://github.com/hjdhnx/drpy-node.git .
 
-# 设置npm镜像为npmmirror
-RUN npm config set registry https://registry.npmmirror.com
-
 # 安装项目依赖项和puppeteer
 RUN yarn && yarn add puppeteer
 
@@ -30,12 +27,6 @@ RUN mkdir -p /tmp/drpys && \
 # 使用alpine:latest作为基础镜像来创建一个更小的镜像
 # 但是无法用pm2
 FROM alpine:latest AS runner
-
-# OCI labels: https://github.com/opencontainers/image-spec/blob/main/annotations.md
-LABEL org.opencontainers.image.authors="hjdhnx"
-LABEL org.opencontainers.image.licenses="GPL-3.0"
-LABEL org.opencontainers.image.title="drpyS"
-LABEL org.opencontainers.image.source="https://github.com/hjdhnx/drpy-node"
 
 # 创建一个工作目录
 WORKDIR /app
@@ -61,7 +52,7 @@ RUN apk add --no-cache python3 \
 # 激活python3虚拟环境并安装依pip3赖
 RUN python3 -m venv /app/.venv && \
     . /app/.venv/bin/activate && \
-    pip3 install -r /app/spider/py/base/requirements.txt -i https://mirrors.cloud.tencent.com/pypi/simple
+    pip3 install -r /app/spider/py/base/requirements.txt
 
 # 暴露应用程序端口（根据您的项目需求调整）
 EXPOSE 5757
