@@ -4,12 +4,13 @@ import argparse
 import re
 
 # 要排除的目录列表
-EXCLUDE_DIRS = ['.git', '.idea', 'soft', 'binary', 'plugins', 'pyTools', 'drop_code', 'jstest', 'local', 'logs',
+EXCLUDE_DIRS = ['.git', '.idea', 'soft', 'plugins/pvideo', 'plugins/req-proxy', 'pyTools', 'drop_code', 'jstest',
+                'local', 'logs',
                 '对话1.txt',
                 'vod_cache', 'data/mv']
 
 # 要排除的文件列表
-EXCLUDE_FILES = ['config/env.json', '.env', 'plugin.js', 'spider/js/UC分享.js', 'spider/js/百忙无果[官].js',
+EXCLUDE_FILES = ['config/env.json', '.env', '.claude', 'plugin.js', 'spider/js/UC分享.js', 'spider/js/百忙无果[官].js',
                  'json/UC分享.json',
                  'jx/奇奇.js', 'jx/芒果关姐.js', 'data/settings/link_data.json', 'index.json', 'custom.json']
 

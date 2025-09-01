@@ -10,7 +10,6 @@ class BaiduHandler {
     constructor() {
         // 初始化百度云盘处理类
         this._cookie = ENV.get('baidu_cookie') || '';
-        this._bdclnd = ENV.get('baidu_bdclnd') || ''; // 单独存储 BDCLND
         this.regex = /https:\/\/pan\.baidu\.com\/s\/([^\\|#/]+)/;
         this.baseHeader = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -31,43 +30,18 @@ class BaiduHandler {
         }, 2 * 60 * 60 * 1000);
     }
 
-    // 获取完整的 cookie（主 cookie + BDCLND）
+    // 获取完整的 cookie
     get cookie() {
-        const mainCookie = (this._cookie || '').trim();
-        const bdclnd = (this._bdclnd || '').trim();
-
-        if (!mainCookie && !bdclnd) return '';
-
-        const cookieParts = [];
-        if (mainCookie) cookieParts.push(mainCookie);
-        if (bdclnd) cookieParts.push(`BDCLND=${bdclnd}`);
-
-        return cookieParts.join('; ');
+        return (this._cookie || '').trim();
     }
 
-    // 设置主 cookie
     set cookie(newCookie) {
-        const processed = (newCookie || '').trim().replace(/\s+/g, ' ');
-        this._cookie = processed;
-        ENV.set('baidu_cookie', this._cookie);
-    }
-
-    // 设置 BDCLND
-    set bdclnd(newBdclnd) {
-        const processed = (newBdclnd || '').trim();
-        this._bdclnd = processed;
-        ENV.set('baidu_bdclnd', this._bdclnd);
-    }
-
-    async refreshBaiduCookie(from = '', newCookie = '') {
-        if (newCookie && typeof newCookie === 'string') {
-            this.cookie = newCookie;
-            return this.cookie;
-        }
-        return this.cookie;
+        console.log('更新cookie');
+        this._cookie = newCookie;
     }
 
     getShareData(url) {
+        this.clearSaveDir();
         // 解析分享链接获取分享ID和密码
         try {
             url = decodeURIComponent(url).replace(/\s+/g, '');
@@ -177,67 +151,82 @@ class BaiduHandler {
         return resp.data !== undefined ? resp.data : resp;
     }
 
-    async getShareToken(shareData) {
-        // 获取分享token
-        if (this.shareTokenCache[shareData.shareId]) {
-            return;
-        }
+    // 新增验证分享链接的函数
+    async verifyShare(shareData) {
+        try {
+            const shareVerify = await this.api(`share/verify?t=${Date.now()}&surl=${shareData.shareId}`, {
+                pwd: shareData.sharePwd || '',
+            }, {Cookie: this.cookie}, 'post');
 
-        delete this.shareTokenCache[shareData.shareId];
-        const shareVerify = await this.api(`share/verify?t=${Date.now()}&surl=${shareData.shareId}&channel=chunlei&web=1&app_id=250528&bdstoken=`, {
-            pwd: shareData.sharePwd || '',
-        }, {
-            'X-Requested-With': 'XMLHttpRequest',
-        });
-
-        if (shareVerify.errno === 0) {
-            if (shareVerify.randsk) {
-                // 单独设置 BDCLND，不修改主 cookie
-                this.bdclnd = shareVerify.randsk;
+            if (shareVerify.errno !== 0) {
+                if (shareVerify.errno === -62 || shareVerify.errno === -9) {
+                    console.log('提取码错误');
+                }
+                console.log('验证提取码失败');
             }
 
-            const headers = {
-                ...this.baseHeader,
-                Cookie: this.cookie || ''
-            };
+            // 更新cookie中的BDCLND
+            if (shareVerify.randsk) {
+                let cookie = this.cookie.replace(/BDCLND=[^;]*;?\s*/g, '');
+                if (cookie.length > 0 && !cookie.endsWith(';')) cookie += '; ';
+                cookie += `BDCLND=${shareVerify.randsk}`;
+                this.cookie = cookie;
+                console.log('已更新randsk到cookie中的BDCLND');
+            }
+
+            return shareVerify;
+        } catch (error) {
+            console.log('验证分享链接失败:', error.message);
+            throw error;
+        }
+    }
+
+    async getShareToken(shareData) {
+        // 先检查缓存，存在则直接返回
+        if (this.shareTokenCache[shareData.shareId]) {
+            return this.shareTokenCache[shareData.shareId];
+        }
+
+        // 缓存不存在时，执行获取令牌的逻辑
+        try {
+            // 等待验证完成
+            const shareVerify = await this.verifyShare(shareData);
+
+            // 验证完成后，执行获取文件列表的逻辑
+            const headers = {...this.baseHeader, Cookie: this.cookie || ''};
 
             const listData = await this.api(`share/list`, {
                 shorturl: shareData.shareId,
                 root: 1,
                 page: 1,
-                num: 100,
-                order: 'name',
-                desc: 1,
-                showempty: 0,
-                web: 1,
-                app_id: 250528,
-                channel: 'chunlei'
-            }, headers, 'get');
+                num: 100
+            }, {headers}, 'get');
 
-            if (listData.errno === 0) {
-                const combinedData = {
-                    ...shareVerify,
-                    list: listData.list,
-                    uk: listData.uk || listData.share_uk,
-                    shareid: listData.share_id || shareVerify.share_id,
-                    randsk: shareVerify.randsk,
-                    sign: listData.sign || this.generateSign(shareData.shareId, shareData.sharePwd),
-                    timestamp: listData.timestamp || Date.now()
-                };
-                this.shareTokenCache[shareData.shareId] = combinedData;
-            } else {
+            if (listData.errno !== 0) {
                 if (listData.errno === -9) {
-                    throw new Error('提取码错误');
+                    console.log('提取码错误');
                 }
-                throw new Error('获取文件列表失败');
+                console.log('获取文件列表失败');
             }
-        } else {
-            if (shareVerify.errno === -62 || shareVerify.errno === -9) {
-                throw new Error('提取码错误');
-            }
-            throw new Error('验证提取码失败');
+
+            // 设置缓存
+            this.shareTokenCache[shareData.shareId] = {
+                ...shareVerify,
+                list: listData.list,
+                uk: listData.uk || listData.share_uk,
+                shareid: listData.share_id || shareVerify.share_id,
+                randsk: shareVerify.randsk,
+                sign: listData.sign || this.generateSign(shareData.shareId, shareData.sharePwd),
+                timestamp: listData.timestamp || Date.now()
+            };
+
+            return this.shareTokenCache[shareData.shareId];
+        } catch (error) {
+            console.log('获取分享token失败:', error.message);
+            throw error;
         }
     }
+
 
     generateSign(shareId, sharePwd) {
         // 生成签名
@@ -251,6 +240,7 @@ class BaiduHandler {
         const shareData = typeof shareInfo === 'string' ? this.getShareData(shareInfo) : shareInfo;
         if (!shareData) return {videos: []};
 
+        // 确保验证和获取令牌完成后再继续
         await this.getShareToken(shareData);
         if (!this.shareTokenCache[shareData.shareId]) return {videos: []};
 
@@ -385,6 +375,10 @@ class BaiduHandler {
                     };
                 }
 
+                const downloadInfo = await this.api(`api/download`, {
+                    type: 'download', path: fullPath, app_id: 250528
+                }, headers, 'get');
+
                 if (downloadInfo.errno === 0 && downloadInfo.dlink) {
                     return {
                         dlink: downloadInfo.dlink,
@@ -464,6 +458,10 @@ class BaiduHandler {
 
     async clearSaveDir() {
         // 清理保存目录
+        if (!this.cookie) {
+            return;
+        }
+
         if (!this.saveDirId) {
             this.saveDirId = await this.createSaveDir();
             if (!this.saveDirId) {
@@ -489,8 +487,8 @@ class BaiduHandler {
         let bdstoken = getBdstoken();
         if (!bdstoken) {
             try {
-                const userInfo = await this.api('api/gettemplatevariable?clienttype=0&app_id=250528&web=1&fields=["bdstoken","token","uk","isdocuser","servertime"]', {Cookie: this.cookie}, 'get');
-                if (userInfo && userInfo.result.bdstoken) {
+                const userInfo = await this.api('api/gettemplatevariable?clienttype=0&app_id=250528&web=1&fields=["bdstoken","token","uk","isdocuser","servertime"]', {}, {Cookie: this.cookie}, 'get');
+                if (userInfo && userInfo.result && userInfo.result.bdstoken) {
                     bdstoken = userInfo.result.bdstoken;
                 }
             } catch (error) {
@@ -522,19 +520,21 @@ class BaiduHandler {
             }
 
             const headers = {
-                'User-Agent': 'netdisk;13.9.4;PGZ110;android-android;15;JSbridge4.4.0;jointBridge;1.1.0;',
+                'User-Agent': 'netdisk;1.4.2;22021211RC;android-android;12;JSbridge4.4.0;jointBridge;1.1.0;',
                 Cookie: this.cookie || ''
             };
 
             const filePaths = listResp.list.map(item => `/${this.saveDirName}/${item.server_filename}`);
             const deleteResp = await this.api('api/filemanager?opera=delete', {
                 filelist: JSON.stringify(filePaths),
-            }, {headers}, 'post');
+                bdstoken: bdstoken
+            }, headers, 'post');
 
             if (deleteResp.errno === 0) {
-                this.saveFileIdCaches = {};
+                console.log('清理保存目录成功');
             }
         } catch (error) {
+            console.log('清理保存目录失败:', error.message);
             return;
         }
     }

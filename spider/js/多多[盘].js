@@ -51,10 +51,13 @@ var rule = {
         'YOUSEE1': 'UC1',
         'YOUSEE11': 'UC2',
     },
+    //线路排序
+    line_order: ['百度', '优汐', '夸克'],
     play_parse: true,
     search_match: true,
     searchable: 1,
     filterable: 1,
+    timeout: 30000,
     quickSearch: 0,
     class_name: '电影&剧集&动漫&综艺&记录',
     class_url: '1&2&4&3&5&20',
@@ -67,7 +70,6 @@ var rule = {
 
     推荐: async function () {
         let {input, pdfa, pdfh, pd} = this;
-        console.log(`✅input的结果:', ${input}`);
         let html = await request(input);
         let d = [];
         let data = pdfa(html, '.module-items .module-item');
@@ -100,81 +102,136 @@ var rule = {
         return setResult(d);
     },
     二级: async function (ids) {
-        let {input, pdfa, pdfh, pd} = this;
-        let html = await request(input);
-        let data = pdfa(html, '.module-row-title');
+        try {
+            console.log("开始加载二级内容...");
+            let loadStartTime = Date.now();
 
-        let vod = {
-            vod_name: pdfh(html, '.video-info&&h1&&Text') || '',
-            type_name: pdfh(html, '.tag-link&&Text') || '',
-            vod_pic: pd(html, '.lazyload&&data-original||data-src||src') || '',
-            vod_content: pdfh(html, '.sqjj_a--span&&Text') || '',
-            vod_remarks: pdfh(html, '.video-info-items:eq(3)&&Text') || '',
-            vod_year: pdfh(html, '.tag-link:eq(2)&&Text') || '',
-            vod_area: pdfh(html, '.tag-link:eq(3)&&Text') || '',
-            vod_actor: pdfh(html, '.video-info-actor:eq(1)&&Text') || '',
-            vod_director: pdfh(html, '.video-info-actor:eq(0)&&Text') || ''
-        };
+            let {input, pdfa, pdfh, pd} = this;
+            let html = await request(input);
+            let data = pdfa(html, '.module-row-title');
 
-        let playform = []
-        let playurls = []
-        let playPans = [];
-        for (let item of data) {
-            let link = pd(item, 'p&&Text').trim();
-            if (/pan.quark.cn/.test(link)) {
-                playPans.push(link);
-                let shareData = Quark.getShareData(link);
-                if (shareData) {
-                    let videos = await Quark.getFilesByShareUrl(shareData);
-                    if (videos.length > 0) {
-                        playform.push('Quark-' + shareData.shareId);
-                        playurls.push(videos.map((v) => {
-                            let list = [shareData.shareId, v.stoken, v.fid, v.share_fid_token, v.subtitle ? v.subtitle.fid : '', v.subtitle ? v.subtitle.share_fid_token : ''];
-                            return v.file_name + '$' + list.join('*');
-                        }).join('#'))
-                    } else {
-                        playform.push('Quark-' + shareData.shareId);
-                        playurls.push("资源已经失效，请访问其他资源")
+            let vod = {
+                vod_name: pdfh(html, '.video-info&&h1&&Text') || '',
+                type_name: pdfh(html, '.tag-link&&Text') || '',
+                vod_pic: pd(html, '.lazyload&&data-original||data-src||src') || '',
+                vod_content: pdfh(html, '.sqjj_a--span&&Text') || '',
+                vod_remarks: pdfh(html, '.video-info-items:eq(3)&&Text') || '',
+                vod_year: pdfh(html, '.tag-link:eq(2)&&Text') || '',
+                vod_area: pdfh(html, '.tag-link:eq(3)&&Text') || '',
+                vod_actor: pdfh(html, '.video-info-actor:eq(1)&&Text') || '',
+                vod_director: pdfh(html, '.video-info-actor:eq(0)&&Text') || ''
+            };
+
+            let playform = [];
+            let playurls = [];
+            let playPans = [];
+
+            // 按网盘类型计数
+            let panCounters = {
+                '夸克': 1,
+                '优汐': 1,
+                '百度': 1
+            };
+
+            // 收集所有线路信息
+            let allLines = [];
+
+            for (let item of data) {
+                let link = pd(item, 'p&&Text').trim();
+                if (/pan.quark.cn/.test(link)) {
+                    playPans.push(link);
+                    let shareData = await Quark.getShareData(link);
+                    if (shareData) {
+                        let videos = await Quark.getFilesByShareUrl(shareData);
+                        if (videos.length > 0) {
+                            let lineName = '夸克#' + panCounters.夸克;
+                            let playUrl = videos.map((v) => {
+                                let list = [shareData.shareId, v.stoken, v.fid, v.share_fid_token, v.subtitle ? v.subtitle.fid : '', v.subtitle ? v.subtitle.share_fid_token : ''];
+                                return v.file_name + '$' + list.join('*');
+                            }).join('#');
+                            allLines.push({name: lineName, url: playUrl, type: '夸克'});
+                            panCounters.夸克++;
+                        } else {
+                            let lineName = '夸克#' + panCounters.夸克;
+                            allLines.push({name: lineName, url: "资源已经失效，请访问其他资源", type: '夸克'});
+                            panCounters.夸克++;
+                        }
+                    }
+                } else if (/drive.uc.cn/i.test(link)) {
+                    playPans.push(link);
+                    let shareData = await UC.getShareData(link);
+                    if (shareData) {
+                        let videos = await UC.getFilesByShareUrl(shareData);
+                        if (videos.length > 0) {
+                            let lineName = '优汐#' + panCounters.优汐;
+                            let playUrl = videos.map((v) => {
+                                let list = [shareData.shareId, v.stoken, v.fid, v.share_fid_token, v.subtitle ? v.subtitle.fid : '', v.subtitle ? v.subtitle.share_fid_token : ''];
+                                return v.file_name + '$' + list.join('*');
+                            }).join('#');
+                            allLines.push({name: lineName, url: playUrl, type: '优汐'});
+                            panCounters.优汐++;
+                        } else {
+                            let lineName = '优汐#' + panCounters.优汐;
+                            allLines.push({name: lineName, url: "资源已经失效，请访问其他资源", type: '优汐'});
+                            panCounters.优汐++;
+                        }
+                    }
+                } else if (/baidu/i.test(link)) {
+                    playPans.push(link);
+                    let shareData = await Baidu.getShareData(link);
+                    if (shareData) {
+                        let files = await Baidu.getFilesByShareUrl(shareData);
+                        if (files.videos && files.videos.length > 0) {
+                            let lineName = `百度#${panCounters.百度}`;
+                            let playUrl = files.videos.map(v =>
+                                `${v.file_name}$${[shareData.shareId, v.fid, v.file_name].join('*')}`
+                            ).join('#');
+                            allLines.push({name: lineName, url: playUrl, type: '百度'});
+                            panCounters.百度++;
+                        } else {
+                            let lineName = `百度#${panCounters.百度}`;
+                            allLines.push({name: lineName, url: "资源已经失效，请访问其他资源", type: '百度'});
+                            panCounters.百度++;
+                        }
                     }
                 }
-            } else if (/drive.uc.cn/.test(link)) {
-                playPans.push(link);
-                let shareData = UC.getShareData(link);
-                if (shareData) {
-                    let videos = await UC.getFilesByShareUrl(shareData);
-                    if (videos.length > 0) {
-                        playform.push('UC-' + shareData.shareId);
-                        playurls.push(videos.map((v) => {
-                            let list = [shareData.shareId, v.stoken, v.fid, v.share_fid_token, v.subtitle ? v.subtitle.fid : '', v.subtitle ? v.subtitle.share_fid_token : ''];
-                            return v.file_name + '$' + list.join('*');
-                        }).join('#'))
-                    } else {
-                        playform.push('UC-' + shareData.shareId);
-                        playurls.push("资源已经失效，请访问其他资源")
-                    }
-                }
-            } else if (/baidu/i.test(link)) {
-                playPans.push(link);
-                let shareData = await Baidu.getShareData(link);
-                if (shareData) {
-                    let files = await Baidu.getFilesByShareUrl(shareData);
-                    if (files.videos && files.videos.length > 0) {
-                        playform.push(`baidu-${shareData.shareId}`);
-                        playurls.push(files.videos.map(v =>
-                            `${v.file_name}$${[shareData.shareId, v.fid, v.file_name].join('*')}`
-                        ).join('#'));
-                    } else {
-                        playform.push(`baidu-${shareData.shareId}`);
-                        playurls.push("资源已经失效，请访问其他资源");
-                    }
-                }
-
             }
+
+            // 按照line_order排序
+            allLines.sort((a, b) => {
+                let aIndex = rule.line_order.indexOf(a.type);
+                let bIndex = rule.line_order.indexOf(b.type);
+                if (aIndex === -1) aIndex = Infinity;
+                if (bIndex === -1) bIndex = Infinity;
+                return aIndex - bIndex;
+            });
+
+            // 提取排序后的结果
+            playform = allLines.map(line => line.name);
+            playurls = allLines.map(line => line.url);
+
+            vod.vod_play_from = playform.join("$$$");
+            vod.vod_play_url = playurls.join("$$$");
+            vod.vod_play_pan = playPans.join("$$$");
+
+            let loadEndTime = Date.now();
+            let loadTime = (loadEndTime - loadStartTime) / 1000;
+            console.log(`二级内容加载完成，耗时: ${loadTime.toFixed(2)}秒`);
+
+            return vod;
+        } catch (error) {
+            console.error(`❌ 二级函数执行出错: ${error.message}`);
+            return {
+                vod_name: '加载失败',
+                type_name: '错误',
+                vod_pic: '',
+                vod_content: `加载失败: ${error.message}`,
+                vod_remarks: '请检查网络或配置',
+                vod_play_from: '加载错误$$$所有链接无效',
+                vod_play_url: `错误信息: ${error.message}$$$请重试或检查配置`,
+                vod_play_pan: ''
+            };
         }
-        vod.vod_play_from = playform.join("$$$")
-        vod.vod_play_url = playurls.join("$$$")
-        vod.vod_play_pan = playPans.join("$$$")
-        return vod
     },
 
     搜索: async function () {
@@ -204,7 +261,7 @@ var rule = {
         let urls = [];
         let UCDownloadingCache = {};
         let UCTranscodingCache = {};
-        if (flag.startsWith('Quark-')) {
+        if (flag.startsWith('夸克')) {
             console.log("夸克网盘解析开始")
             let down = await Quark.getDownload(ids[0], ids[1], ids[2], ids[3], true);
             let headers = {
@@ -229,15 +286,15 @@ var rule = {
                 url: urls,
                 header: headers
             }
-        } else if (flag.startsWith('UC-')) {
-            console.log("UC网盘解析开始");
+        } else if (flag.startsWith('优汐')) {
+            console.log("优汐网盘解析开始");
             if (!UCDownloadingCache[ids[1]]) {
                 let down = await UC.getDownload(ids[0], ids[1], ids[2], ids[3], true);
                 if (down) UCDownloadingCache[ids[1]] = down;
             }
             let downCache = UCDownloadingCache[ids[1]];
             return await UC.getLazyResult(downCache, mediaProxyUrl)
-        } else if (flag.startsWith('baidu-')) {
+        } else if (flag.startsWith('百度')) {
             console.log("百度网盘解析开始");
             let down = await Baidu.getDownload(ids[0], ids[1], ids[2]);
             let headers = {
