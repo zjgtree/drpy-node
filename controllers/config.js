@@ -141,6 +141,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                     }
                     Object.assign(ruleMeta, {
                         title: ruleObject.title,
+                        author: ruleObject.author,
+                        类型: ruleObject.类型 || '影视',
                         searchable: ruleObject.searchable,
                         filterable: ruleObject.filterable,
                         quickSearch: ruleObject.quickSearch,
@@ -242,6 +244,8 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                         }
                         Object.assign(ruleMeta, {
                             title: ruleObject.title,
+                            author: ruleObject.author,
+                            类型: ruleObject.类型 || '影视',
                             searchable: ruleObject.searchable,
                             filterable: ruleObject.filterable,
                             quickSearch: ruleObject.quickSearch,

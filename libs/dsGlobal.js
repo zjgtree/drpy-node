@@ -12,6 +12,7 @@ globalThis.Ali = Ali;
 globalThis.Cloud = Cloud;
 globalThis.Yun = Yun;
 globalThis.Pan = Pan;
+globalThis.Baidu = Baidu;
 globalThis.AIS = AIS;
 globalThis.zlib = zlib;
 globalThis.minizlib = minizlib

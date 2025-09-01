@@ -227,8 +227,8 @@ var rule = {
     aliScanCheck: null,
     biliScanCheck: null,
     host: 'http://empty',
-    class_name: '推送&夸克&UC&阿里&天翼&哔哩&系统配置&测试&接口挂载&视频解析',
-    class_url: 'push&quark&uc&ali&cloud&bili&system&test&apiLink&videoParse',
+    class_name: '推送&夸克&UC&阿里&天翼&百度&哔哩&系统配置&测试&接口挂载&视频解析',
+    class_url: 'push&quark&uc&ali&cloud&baidu&bili&system&test&apiLink&videoParse',
     url: '/fyclass',
 
     预处理: async function (env) {
@@ -247,6 +247,7 @@ var rule = {
             'ali': urljoin(publicUrl, './images/icon_cookie/阿里.png'),
             'bili': urljoin(publicUrl, './images/icon_cookie/哔哩.png'),
             'cloud': urljoin(publicUrl, './images/icon_cookie/天翼.png'),
+            'baidu': urljoin(publicUrl, './images/icon_cookie/百度.png'),
             'adult': urljoin(publicUrl, './images/icon_cookie/chat.webp'),
             'test': urljoin(publicUrl, './icon.svg'),
             'lives': urljoin(publicUrl, './images/lives.jpg'),
@@ -340,6 +341,10 @@ var rule = {
                 d.push(getInput('get_cloud_account', '查看天翼 账号', images.cloud));
                 d.push(getInput('get_cloud_password', '查看天翼 密码', images.cloud));
                 d.push(getInput('get_cloud_cookie', '查看天翼 cookie', images.cloud));
+                break;
+            case 'baidu':
+                d.push(genMultiInput('baidu_cookie', '设置百度 cookie', null, images.baidu));
+                d.push(getInput('get_baidu_cookie', '查看百度 cookie', images.baidu));
                 break;
             case 'bili':
                 d.push(genMultiInput('bili_cookie', '设置哔哩 cookie', null, images.bili));
@@ -1045,6 +1050,7 @@ var rule = {
             'cloud_password',
             'cloud_cookie',
             'bili_cookie',
+            'baidu_cookie',
             'hide_adult',
             'thread',
             'play_local_proxy_type',
@@ -1075,6 +1081,7 @@ var rule = {
             'get_cloud_password',
             'get_cloud_cookie',
             'get_bili_cookie',
+            'get_baidu_cookie',
             'get_hide_adult',
             'get_thread',
             'play_local_proxy_type',

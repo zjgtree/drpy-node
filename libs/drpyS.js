@@ -17,6 +17,7 @@ import fileHeaderManager from "../utils/fileHeaderManager.js";
 import {getSitesMap} from "../utils/sites-map.js";
 import {ENV} from '../utils/env.js';
 import {Quark} from "../utils/quark.js";
+import {Baidu} from "../utils/baidu.js";
 import {UC} from "../utils/uc.js";
 import {Ali} from "../utils/ali.js";
 import {Cloud} from "../utils/cloud.js";
@@ -323,6 +324,7 @@ export async function getSandbox(env = {}) {
         ENV,
         _ENV,
         Quark,
+        Baidu,
         UC,
         Ali,
         Cloud,

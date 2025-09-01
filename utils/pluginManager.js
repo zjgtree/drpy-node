@@ -136,19 +136,53 @@ function startPlugin(plugin, rootDir) {
 }
 
 /**
+ * 生成插件唯一 key
+ * @param {Object} plugin 插件配置
+ * @param {number} index 插件在配置里的序号
+ */
+function getProcessKey(plugin, index) {
+    if (plugin.id) return plugin.id; // 用户自定义 id
+    return `${plugin.name}#${index + 1}`;
+}
+
+/**
  * 启动所有插件
  * @param {string} rootDir 项目根目录
  */
 export function startAllPlugins(rootDir = process.cwd()) {
     console.log("[pluginManager] 准备启动所有插件...");
     const processes = {};
-    for (const plugin of plugins) {
+    plugins.forEach((plugin, index) => {
         const proc = startPlugin(plugin, rootDir);
+        const key = getProcessKey(plugin, index);
+
         if (proc) {
-            processes[plugin.name] = proc;
+            processes[key] = proc;
+            console.log(`[pluginManager] 插件已启动并注册进程: ${key} (pid=${proc.pid})`);
         } else {
-            console.error(`[pluginManager] 插件 ${plugin.name} 启动失败，未加入到 processes`);
+            console.error(`[pluginManager] 插件 ${key} 启动失败，未加入到 processes`);
         }
-    }
+    });
     return processes;
+}
+
+/**
+ * 停止指定插件
+ * @param {Object} processes 插件进程字典
+ * @param {string} key 插件唯一 key
+ */
+export function stopPlugin(processes, key) {
+    const proc = processes[key];
+    if (!proc) {
+        console.warn(`[pluginManager] 未找到插件进程: ${key}`);
+        return;
+    }
+
+    console.log(`[pluginManager] 停止插件: ${key} (pid=${proc.pid})`);
+    try {
+        proc.kill("SIGTERM");
+        delete processes[key];
+    } catch (err) {
+        console.error(`[pluginManager] 停止插件 ${key} 失败:`, err);
+    }
 }
