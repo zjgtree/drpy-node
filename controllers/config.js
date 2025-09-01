@@ -739,6 +739,8 @@ export default (fastify, options, done) => {
         const query = request.query; // 获取 query 参数
         const pwd = query.pwd || '';
         const sub_code = query.sub || '';
+        const cat_sub_code = ENV.get('cat_sub_code', 'all');
+        const must_sub_code = Number(ENV.get('must_sub_code', '0')) || 0;
         const cfg_path = request.params['*']; // 捕获整个路径
         try {
             // 获取主机名，协议及端口
@@ -783,7 +785,7 @@ export default (fastify, options, done) => {
             // }
             const getFilePath = (cfgPath, rootDir, fileName) => path.join(rootDir, `data/cat/${fileName}`);
             const processContent = (content, cfgPath, requestUrl, requestHost) => {
-                const $config_url = requestUrl.replace(cfgPath, `/1?sub=all&pwd=${process.env.API_PWD || ''}`);
+                const $config_url = requestUrl.replace(cfgPath, `/1?sub=${cat_sub_code}&pwd=${process.env.API_PWD || ''}`);
                 return content.replaceAll('$config_url', $config_url).replaceAll('$host', requestHost);
             }
 
@@ -832,10 +834,14 @@ export default (fastify, options, done) => {
             if (sub_code) {
                 let subs = getSubs(options.subFilePath);
                 sub = subs.find(it => it.code === sub_code);
-                // console.log('sub:', sub);
+                console.log('sub:', sub);
                 if (sub && sub.status === 0) {
                     return reply.status(500).send({error: `此订阅码:【${sub_code}】已禁用`});
+                } else if (!sub && must_sub_code) {
+                    return reply.status(500).send({error: `此订阅码:【${sub_code}】不存在`});
                 }
+            } else if (!sub_code && must_sub_code) {
+                return reply.status(500).send({error: `缺少订阅码参数`});
             }
 
             const siteJSON = await generateSiteJSON(options, requestHost, sub, pwd);

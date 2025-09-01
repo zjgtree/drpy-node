@@ -1,5 +1,5 @@
 import {readFile} from 'fs/promises';
-import {existsSync, readFileSync, writeFileSync, mkdirSync} from 'fs';
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'fs';
 import {fileURLToPath} from "url";
 import {XMLHttpRequest} from 'xmlhttprequest';
 import WebSocket, {WebSocketServer} from 'ws';
@@ -28,7 +28,7 @@ import {getParsesDict} from "../utils/file.js";
 import {getFirstLetter} from "../utils/pinyin-tool.js";
 import {reqs} from "../utils/req.js";
 import "../utils/random-http-ua.js";
-import {rootRequire, initializeGlobalDollar} from "../libs_drpy/moduleLoader.js";
+import {initializeGlobalDollar, rootRequire} from "../libs_drpy/moduleLoader.js";
 import {base64Decode, base64Encode, md5, rc4, rc4_decode, rc4Decrypt, rc4Encrypt} from "../libs_drpy/crypto-util.js";
 import template from '../libs_drpy/template.js'
 import batchExecute from '../libs_drpy/batchExecute.js';
@@ -472,6 +472,9 @@ export async function init(filePath, env = {}, refresh) {
         // rule注入完毕后添加自定义req扩展request方法进入规则,这个代码里可以直接获取rule的任意对象，而且还是独立隔离的
         const reqExtendScript = new vm.Script(req_extend_code);
         reqExtendScript.runInContext(context);
+        // 把request / post 函数挂载给rule对象
+        sandbox.rule.request = sandbox.request;
+        sandbox.rule.post = sandbox.post;
 
         // 访问沙箱中的 rule 对象。不进行deepCopy了,避免初始化或者预处理对rule.xxx进行修改后，在其他函数里使用却没生效问题
         // const moduleObject = utils.deepCopy(sandbox.rule);
@@ -688,6 +691,417 @@ async function invokeWithInjectVars(rule, method, injectVars, args) {
 }
 
 /**
+ * 通用免嗅探解析函数
+ * @param moduleObject
+ * @param method
+ * @param injectVars
+ * @param args
+ * @returns {Promise<*>}
+ */
+async function commonLazyParse(moduleObject, method, injectVars, args) {
+    const tmpLazyFunction = async function () {
+        let {input} = this;
+        return input
+    };
+    if (moduleObject[method] && typeof moduleObject[method] === 'function') {
+        try {
+            return await invokeWithInjectVars(moduleObject, moduleObject[method], injectVars, args);
+        } catch (e) {
+            let playUrl = injectVars.input || '';
+            log(`执行免嗅代码发送了错误: ${e.message},原始链接为:${playUrl}`);
+            if (SPECIAL_URL.test(playUrl) || /^(push:)/.test(playUrl) || playUrl.startsWith('http')) {
+                return await invokeWithInjectVars(moduleObject, tmpLazyFunction, injectVars, args);
+            } else {
+                throw e
+            }
+        }
+    } else if (!moduleObject[method]) {// 新增特性，可以不写lazy属性
+        return await invokeWithInjectVars(moduleObject, tmpLazyFunction, injectVars, args);
+    }
+}
+
+/**
+ * 通用一级字符串解析函数
+ * @param moduleObject
+ * @param method
+ * @param injectVars
+ * @param args
+ * @returns {Promise<*>}
+ */
+async function commonCategoryListParse(moduleObject, method, injectVars, args) {
+    // 一级字符串p
+    let p = moduleObject[method].trim();
+    const request = moduleObject.request;
+    const tmpFunction = async function () {
+        const {input, MY_URL, MY_CATE, pdfa, pdfh, pd, pjfa, pjfh, pj} = this;
+        const d = [];
+        p = p.split(';');
+        if (p.length < 5) {
+            return d
+        }
+        let is_json = p[0].startsWith('json:');
+        p[0] = p[0].replace(/^(jsp:|json:|jq:)/, '');
+        let html = await request(input);
+        if (html) {
+            let $pdfa;
+            let $pdfh;
+            let $pd;
+            if (is_json) {
+                html = dealJson(html);
+                $pdfa = pjfa;
+                $pdfh = pjfh;
+                $pd = pj;
+            } else {
+                $pdfa = pdfa;
+                $pdfh = pdfh;
+                $pd = pd;
+            }
+            let list = $pdfa(html, p[0]);
+            for (const it of list) {
+                let links = p[4].split('+').map(p4 => {
+                    return !moduleObject.detailUrl ? $pd(it, p4, MY_URL) : $pdfh(it, p4);
+                });
+                let link = links.join('$');
+
+                let vod_id = moduleObject.detailUrl ? MY_CATE + '$' + link : link;
+                let vod_name = $pdfh(it, p[1]).replace(/\n|\t/g, '').trim();
+                let vod_pic = $pd(it, p[2], MY_URL);
+                let vod_remarks = $pdfh(it, p[3]).replace(/\n|\t/g, '').trim();
+
+                if (moduleObject['二级'] === '*') {
+                    vod_id = vod_id + '@@' + vod_name + '@@' + vod_pic;
+                }
+                if (vod_pic) {
+                    if (moduleObject['图片替换'] && typeof moduleObject['图片替换'] === 'function') {
+                        vod_pic = await moduleObject['图片替换'].apply(injectVars, [vod_pic]);
+                    }
+                    if (moduleObject['图片来源'] && typeof moduleObject['图片替换'] === 'string') {
+                        vod_pic += moduleObject['图片来源'];
+                    }
+                }
+                d.push({
+                    'vod_id': vod_id,
+                    'vod_name': vod_name,
+                    'vod_pic': vod_pic,
+                    'vod_remarks': vod_remarks,
+                });
+            }
+        }
+        return d
+    };
+    return await invokeWithInjectVars(moduleObject, tmpFunction, injectVars, args);
+}
+
+/**
+ * 推荐和搜索单字段继承一级
+ * @param p 推荐或搜索的解析分割;列表
+ * @param pn 自身列表序号
+ * @param pp  一级解析分割;列表
+ * @param ppn 继承一级序号
+ * @returns {*}
+ */
+function getPP(p, pn, pp, ppn) {
+    try {
+        return p[pn] === '*' && pp.length > ppn ? pp[ppn] : p[pn]
+    } catch (e) {
+        return ''
+    }
+}
+
+
+/**
+ * 通用搜索字符串解析函数
+ * @param moduleObject
+ * @param method
+ * @param injectVars
+ * @param args
+ * @returns {Promise<*>}
+ */
+async function commonSearchListParse(moduleObject, method, injectVars, args) {
+    // 搜索字符串p
+    let p = moduleObject[method] === '*' && moduleObject['一级'] ? moduleObject['一级'] : moduleObject[method];
+    // 一级是函数直接调用函数
+    if (typeof p === 'function') {
+        // console.log('搜索继承一级函数');
+        return await invokeWithInjectVars(moduleObject, p, injectVars, args);
+    }
+    p = p.trim();
+    let pp = typeof moduleObject['一级'] === 'string' ? moduleObject['一级'].split(';') : [];
+    const request = moduleObject.request;
+    const rule_fetch_params = moduleObject.rule_fetch_params;
+    const tmpFunction = async function () {
+        const {input, MY_URL, pdfa, pdfh, pd, pjfa, pjfh, pj} = this;
+        const d = [];
+        p = p.split(';');
+        if (p.length < 5) {
+            return d
+        }
+        let p0 = getPP(p, 0, pp, 0);
+        let is_json = p0.startsWith('json:');
+        p0 = p0.replace(/^(jsp:|json:|jq:)/, '');
+        let req_method = MY_URL.split(';').length > 1 ? MY_URL.split(';')[1].toLowerCase() : 'get';
+        let html;
+        if (req_method === 'post') {
+            let rurls = MY_URL.split(';')[0].split('#')
+            let rurl = rurls[0]
+            let params = rurls.length > 1 ? rurls[1] : '';
+            console.log(`post=》rurl:${rurl},params:${params}`);
+            let _fetch_params = deepCopy(rule_fetch_params);
+            let postData = {body: params};
+            Object.assign(_fetch_params, postData);
+            html = await post(rurl, _fetch_params);
+        } else if (req_method === 'postjson') {
+            let rurls = MY_URL.split(';')[0].split('#')
+            let rurl = rurls[0]
+            let params = rurls.length > 1 ? rurls[1] : '';
+            console.log(`postjson-》rurl:${rurl},params:${params}`);
+            try {
+                params = JSON.parse(params);
+            } catch (e) {
+                params = '{}'
+            }
+            let _fetch_params = deepCopy(rule_fetch_params);
+            let postData = {body: params};
+            Object.assign(_fetch_params, postData);
+            html = await post(rurl, _fetch_params);
+        } else {
+            html = await request(MY_URL);
+        }
+        if (html) {
+            let $pdfa;
+            let $pdfh;
+            let $pd;
+            if (is_json) {
+                html = dealJson(html);
+                $pdfa = pjfa;
+                $pdfh = pjfh;
+                $pd = pj;
+            } else {
+                $pdfa = pdfa;
+                $pdfh = pdfh;
+                $pd = pd;
+            }
+            let list = $pdfa(html, p0);
+            let p1 = getPP(p, 1, pp, 1);
+            let p2 = getPP(p, 2, pp, 2);
+            let p3 = getPP(p, 3, pp, 3);
+            let p4 = getPP(p, 4, pp, 4);
+            let p5 = getPP(p, 5, pp, 5);
+            for (const it of list) {
+                let links = p4.split('+').map(_p4 => {
+                    return !moduleObject.detailUrl ? $pd(it, _p4, MY_URL) : $pdfh(it, _p4)
+                });
+                let link = links.join('$');
+                let content;
+                if (p.length > 5 && p[5]) {
+                    content = $pdfh(it, p5);
+                } else {
+                    content = '';
+                }
+                let vod_id = link;
+                let vod_name = $pdfh(it, p1).replace(/\n|\t/g, '').trim();
+                let vod_pic = $pd(it, p2, MY_URL);
+                let vod_remarks = $pdfh(it, p3).replace(/\n|\t/g, '').trim();
+                let vod_content = content.replace(/\n|\t/g, '').trim();
+
+                if (moduleObject['二级'] === '*') {
+                    vod_id = vod_id + '@@' + vod_name + '@@' + vod_pic;
+                }
+                if (vod_pic) {
+                    if (moduleObject['图片替换'] && typeof moduleObject['图片替换'] === 'function') {
+                        vod_pic = await moduleObject['图片替换'].apply(injectVars, [vod_pic]);
+                    }
+                    if (moduleObject['图片来源'] && typeof moduleObject['图片替换'] === 'string') {
+                        vod_pic += moduleObject['图片来源'];
+                    }
+                }
+                d.push({
+                    'vod_id': vod_id,
+                    'vod_name': vod_name,
+                    'vod_pic': vod_pic,
+                    'vod_remarks': vod_remarks,
+                    'vod_content': vod_content,
+                });
+            }
+        }
+        return d
+    };
+    return await invokeWithInjectVars(moduleObject, tmpFunction, injectVars, args);
+}
+
+/**
+ * 通用推荐字符串解析函数
+ * @param moduleObject
+ * @param method
+ * @param injectVars
+ * @param args
+ * @returns {Promise<*>}
+ */
+async function commonHomeListParse(moduleObject, method, injectVars, args) {
+    // 推荐字符串p
+    let p = moduleObject[method] === '*' && moduleObject['一级'] ? moduleObject['一级'] : moduleObject[method];
+    // 一级是函数直接调用函数
+    if (typeof p === 'function') {
+        // console.log('推荐继承一级函数');
+        return await invokeWithInjectVars(moduleObject, p, injectVars, args);
+    }
+    // 推荐完全和一级相同的话，双重定位为false
+    if (moduleObject[method] === '*') {
+        moduleObject['double'] = false;
+    }
+
+    p = p.trim();
+    let pp = typeof moduleObject['一级'] === 'string' ? moduleObject['一级'].split(';') : [];
+    const request = moduleObject.request;
+    const is_double = moduleObject.double;
+    const tmpFunction = async function () {
+        const {input, MY_URL, pdfa, pdfh, pd, pjfa, pjfh, pj} = this;
+        const d = [];
+        p = p.split(';');
+        if ((!is_double && p.length < 5) || (is_double && p.length < 6)) {
+            return d
+        }
+        let p0 = getPP(p, 0, pp, 0);
+        let is_json = p0.startsWith('json:');
+        p0 = p0.replace(/^(jsp:|json:|jq:)/, '');
+        let html = await request(MY_URL);
+        if (html) {
+            let $pdfa;
+            let $pdfh;
+            let $pd;
+            if (is_json) {
+                html = dealJson(html);
+                $pdfa = pjfa;
+                $pdfh = pjfh;
+                $pd = pj;
+            } else {
+                $pdfa = pdfa;
+                $pdfh = pdfh;
+                $pd = pd;
+            }
+            let list = $pdfa(html, p0);
+
+            if (is_double) {
+                let p1 = getPP(p, 1, pp, 0);
+                let p2 = getPP(p, 2, pp, 1);
+                let p3 = getPP(p, 3, pp, 2);
+                let p4 = getPP(p, 4, pp, 3);
+                let p5 = getPP(p, 5, pp, 4);
+                let p6 = getPP(p, 6, pp, 5);
+
+                for (const it of list) {
+                    let list2 = $pdfa(it, p1);
+                    for (let it2 of list2) {
+                        let vod_name = $pdfh(it2, p2);
+                        let vod_pic = '';
+                        try {
+                            vod_pic = $pd(it2, p3);
+                        } catch (e) {
+                        }
+                        let vod_remarks = '';
+                        try {
+                            vod_remarks = $pdfh(it2, p4);
+                        } catch (e) {
+                        }
+
+                        let links = [];
+                        for (let _p5 of p5.split('+')) {
+                            let link = !moduleObject.detailUrl ? $pd(it2, _p5, MY_URL) : $pdfh(it2, _p5);
+                            links.push(link);
+                        }
+                        let vod_id = links.join('$');
+
+                        let vod_content;
+                        if (p.length > 6 && p[6]) {
+                            vod_content = $pdfh(it2, p6);
+                        } else {
+                            vod_content = '';
+                        }
+
+                        if (moduleObject['二级'] === '*') {
+                            vod_id = vod_id + '@@' + vod_name + '@@' + vod_pic;
+                        }
+                        if (vod_pic) {
+                            if (moduleObject['图片替换'] && typeof moduleObject['图片替换'] === 'function') {
+                                vod_pic = await moduleObject['图片替换'].apply(injectVars, [vod_pic]);
+                            }
+                            if (moduleObject['图片来源'] && typeof moduleObject['图片替换'] === 'string') {
+                                vod_pic += moduleObject['图片来源'];
+                            }
+                        }
+
+                        d.push({
+                            'vod_id': vod_id,
+                            'vod_name': vod_name,
+                            'vod_pic': vod_pic,
+                            'vod_remarks': vod_remarks,
+                            'vod_content': vod_content,
+                        });
+
+                    }
+
+
+                }
+            } else {
+                let p1 = getPP(p, 1, pp, 1);
+                let p2 = getPP(p, 2, pp, 2);
+                let p3 = getPP(p, 3, pp, 3);
+                let p4 = getPP(p, 4, pp, 4);
+                let p5 = getPP(p, 5, pp, 5);
+
+
+                for (let it of list) {
+                    let vod_name = $pdfh(it, p1);
+                    let vod_pic = '';
+                    try {
+                        vod_pic = $pd(it, p2);
+                    } catch (e) {
+                    }
+                    let vod_remarks = '';
+                    try {
+                        vod_remarks = $pdfh(it, p3);
+                    } catch (e) {
+                    }
+                    let links = [];
+                    for (let _p5 of p4.split('+')) {
+                        let link = !moduleObject.detailUrl ? $pd(it, _p5, MY_URL) : $pdfh(it, _p5);
+                        links.push(link);
+                    }
+                    let vod_id = links.join('$');
+                    let vod_content;
+                    if (p.length > 5 && p[5]) {
+                        vod_content = $pdfh(it, p5);
+                    } else {
+                        vod_content = '';
+                    }
+
+                    if (moduleObject['二级'] === '*') {
+                        vod_id = vod_id + '@@' + vod_name + '@@' + vod_pic;
+                    }
+                    if (vod_pic) {
+                        if (moduleObject['图片替换'] && typeof moduleObject['图片替换'] === 'function') {
+                            vod_pic = await moduleObject['图片替换'].apply(injectVars, [vod_pic]);
+                        }
+                        if (moduleObject['图片来源'] && typeof moduleObject['图片替换'] === 'string') {
+                            vod_pic += moduleObject['图片来源'];
+                        }
+                    }
+                    d.push({
+                        'vod_id': vod_id,
+                        'vod_name': vod_name,
+                        'vod_pic': vod_pic,
+                        'vod_remarks': vod_remarks,
+                        'vod_content': vod_content,
+                    });
+                }
+            }
+        }
+        return d
+    };
+    return await invokeWithInjectVars(moduleObject, tmpFunction, injectVars, args);
+}
+
+/**
  * 调用模块的指定方法
  * @param {string} filePath - 模块文件路径
  * @param env 全局的环境变量-针对本规则，如代理地址
@@ -747,45 +1161,46 @@ async function invokeMethod(filePath, env, method, args = [], injectVars = {}) {
     injectVars['method'] = method;
     // 环境变量扩展进入this区域
     Object.assign(injectVars, env);
-    if (method === 'lazy') {
-        const tmpLazyFunction = async function () {
-            let {input} = this;
-            return input
-        };
-        if (moduleObject[method] && typeof moduleObject[method] === 'function') {
-            try {
-                return await invokeWithInjectVars(moduleObject, moduleObject[method], injectVars, args);
-            } catch (e) {
-                let playUrl = injectVars.input || '';
-                log(`执行免嗅代码发送了错误: ${e.message},原始链接为:${playUrl}`);
-                if (SPECIAL_URL.test(playUrl) || /^(push:)/.test(playUrl) || playUrl.startsWith('http')) {
-                    return await invokeWithInjectVars(moduleObject, tmpLazyFunction, injectVars, args);
-                } else {
-                    throw e
-                }
-            }
-        } else if (!moduleObject[method]) {// 新增特性，可以不写lazy属性
-            return await invokeWithInjectVars(moduleObject, tmpLazyFunction, injectVars, args);
+    // 免嗅探代码特殊处理: 必须是函数或者没写
+    if (method === 'lazy' && ((moduleObject[method] && typeof moduleObject[method] === 'function') || !moduleObject[method])) {
+        return await commonLazyParse(moduleObject, method, injectVars, args)
+    }
+    // 字符串lazy直接返回嗅探
+    else if (method === 'lazy' && typeof moduleObject[method] === 'string') {
+        return {
+            parse: 1,
+            url: injectVars.input,
+            header: moduleObject.headers && Object.keys(moduleObject.headers).length > 0 ? moduleObject.headers : undefined
         }
-    } else if (moduleObject[method] && typeof moduleObject[method] === 'function') {
-        // console.log('injectVars:', injectVars);
-        return await invokeWithInjectVars(moduleObject, moduleObject[method], injectVars, args);
-    } else if (!moduleObject[method] && method === 'class_parse') { // 新增特性，可以不写class_parse属性
+    }
+    // 分类动态解析特殊处理:允许不写
+    else if (method === 'class_parse' && !moduleObject[method]) { // 新增特性，可以不写class_parse属性
         const tmpClassFunction = async function () {
         };
         return await invokeWithInjectVars(moduleObject, tmpClassFunction, injectVars, args);
+    }
+    // 函数直接执行
+    else if (moduleObject[method] && typeof moduleObject[method] === 'function') {
+        // console.log('injectVars:', injectVars);
+        return await invokeWithInjectVars(moduleObject, moduleObject[method], injectVars, args);
+    }
+    // 特殊处理一级字符串
+    else if (method === '一级' && moduleObject[method] && typeof moduleObject[method] === 'string') {
+        return await commonCategoryListParse(moduleObject, method, injectVars, args);
+    }
+    // 特殊处理搜索字符串
+    else if (method === '搜索' && moduleObject[method] && typeof moduleObject[method] === 'string') {
+        return await commonSearchListParse(moduleObject, method, injectVars, args);
+    }
+    // 特殊处理推荐字符串
+    else if (method === '推荐' && moduleObject[method] && typeof moduleObject[method] === 'string') {
+        return await commonHomeListParse(moduleObject, method, injectVars, args);
     } else {
+        // 其他未知函数或者函数属性是字符串
         if (['推荐', '一级', '搜索'].includes(method)) {
             return []
         } else if (['二级'].includes(method)) {
             return {}
-        } else if (['lazy'].includes(method)) {
-            // console.log(injectVars);
-            return {
-                parse: 1,
-                url: injectVars.input,
-                header: moduleObject.headers && Object.keys(moduleObject.headers).length > 0 ? moduleObject.headers : undefined
-            }
         } else {  // class_parse一定要有，这样即使不返回数据都能自动取class_name和class_url的内容
             throw new Error(`Method ${method} not found in module ${filePath}`);
         }

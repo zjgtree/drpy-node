@@ -415,6 +415,10 @@ var rule = {
                 d.push(getInput('get_enable_link_push', '查看启用挂载推送', images.settings));
                 d.push(genMultiInput('enable_link_jar', '设置允许挂载Jar', '设置为1可以启用。默认即关闭。设置其他值禁用', images.settings));
                 d.push(getInput('get_enable_link_jar', '查看允许挂载Jar', images.settings));
+                d.push(genMultiInput('cat_sub_code', '猫爪订阅码', '自定义猫爪源的订阅码。默认为all', images.settings));
+                d.push(getInput('get_cat_sub_code', '查看猫爪订阅码', images.settings));
+                d.push(genMultiInput('must_sub_code', '严格订阅码', '设置为1可以启用。默认即关闭', images.settings));
+                d.push(getInput('get_must_sub_code', '查看严格订阅码', images.settings));
 
                 break;
             case 'videoParse':
@@ -1071,6 +1075,8 @@ var rule = {
             'enable_link_data',
             'enable_link_push',
             'enable_link_jar',
+            'cat_sub_code',
+            'must_sub_code',
             'mg_hz',
         ];
         let get_cookie_sets = [
@@ -1102,6 +1108,8 @@ var rule = {
             'get_enable_link_data',
             'get_enable_link_push',
             'get_enable_link_jar',
+            'get_cat_sub_code',
+            'get_must_sub_code',
             'get_mg_hz',
         ];
         if (cookie_sets.includes(action) && value) {
