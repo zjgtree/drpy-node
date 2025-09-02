@@ -7,9 +7,9 @@ import {fileURLToPath, pathToFileURL} from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// plugin.js 和 plugin.example.js 在上级目录
-const userConfigPath = path.join(__dirname, "../plugin.js");
-const exampleConfigPath = path.join(__dirname, "../plugin.example.js");
+// .plugins.js 和 .plugins.example.js 在上级目录
+const userConfigPath = path.join(__dirname, "../.plugins.js");
+const exampleConfigPath = path.join(__dirname, "../.plugins.example.js");
 
 // 尝试加载用户配置，如果没有就用 example
 let plugins = [];
@@ -17,10 +17,10 @@ try {
     console.log(`检查插件配置文件: ${userConfigPath} 是否存在`);
     if (fs.existsSync(userConfigPath)) {
         plugins = (await import(pathToFileURL(userConfigPath).href)).default;
-        console.log("[pluginManager] 使用用户 plugin.js 配置");
+        console.log("[pluginManager] 使用用户 .plugins.js 配置");
     } else if (fs.existsSync(exampleConfigPath)) {
         plugins = (await import(pathToFileURL(exampleConfigPath).href)).default;
-        console.log("[pluginManager] 使用默认 plugin.example.js 配置");
+        console.log("[pluginManager] 使用默认 .plugins.example.js 配置");
     }
 } catch (err) {
     console.error("[pluginManager] 加载插件配置失败:", err);

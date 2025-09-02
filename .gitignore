@@ -150,5 +150,5 @@ dist
 /scripts/python/appMap.txt
 /binary/
 /plugins/
-/plugin.js
 /.claude
+/.plugins.js
