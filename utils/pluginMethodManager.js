@@ -1,5 +1,3 @@
-import path from "path";
-
 /**
  * 调用本地 Go /proxy 接口
  * @param {Object} options
@@ -11,14 +9,14 @@ import path from "path";
  * @param {string} [options.goHost] - Go 服务 host 默认 http://127.0.0.1:57571
  * @returns {Promise<Object>} { status, headers, body }
  */
-export async function goProxy({
-                                  method = "GET",
-                                  url,
-                                  headers = {},
-                                  body,
-                                  timeout,
-                                  goHost = "http://127.0.0.1:57571",
-                              }) {
+export async function reqProxy({
+                                   method = "GET",
+                                   url,
+                                   headers = {},
+                                   body,
+                                   timeout,
+                                   goHost = "http://127.0.0.1:57571",
+                               }) {
     if (!url) throw new Error("url is required");
 
     const proxyUrl = new URL("/proxy", goHost);
@@ -42,15 +40,4 @@ export async function goProxy({
 
     const data = await resp.json();
     return data;
-}
-
-export function getGoBinary(rootDir) {
-    const platform = process.platform;
-    const go_bin = './binary/go_proxy/'
-    if (platform === "win32") return path.join(rootDir, go_bin, './server-windows.exe');
-    if (platform === "linux") return path.join(rootDir, go_bin, './server-linux');
-    if (platform === "android") return path.join(rootDir, go_bin, './server-android'); // 安卓设备
-    console.log("[getGoBinary] Unsupported platform: " + platform);
-    return null;
-    // throw new Error("Unsupported platform: " + platform);
 }

@@ -149,3 +149,6 @@ dist
 *.pyc
 /scripts/python/appMap.txt
 /binary/
+/plugins/
+/.claude
+/.plugins.js
